@@ -1,305 +1,265 @@
 from flask import Flask, request, jsonify
-
 import json
 import os
 
 app = Flask(__name__)
 
-DB="data.json"
+DB = "data.json"
 
-
-###########################
+################################################
+# CARGAR / GUARDAR
+################################################
 
 def load():
 
     if not os.path.exists(DB):
 
         return {
-
-            "equipos":{}
-
+            "equipos": {}
         }
 
-    with open(DB,"r",encoding="utf8") as f:
+    try:
 
-        return json.load(f)
+        with open(DB, "r", encoding="utf8") as f:
+
+            return json.load(f)
+
+    except:
+
+        return {
+            "equipos": {}
+        }
 
 
 def save(data):
 
-    with open(DB,"w",encoding="utf8") as f:
+    with open(DB, "w", encoding="utf8") as f:
 
         json.dump(
-
             data,
-
             f,
-
             indent=4,
-
             ensure_ascii=False
-
         )
 
-
-###########################
+################################################
 # REPORT API
-###########################
+################################################
 
-@app.route("/report",methods=["POST"])
-
+@app.route("/report", methods=["POST"])
 def report():
 
-    body=request.json
+    try:
 
-    team=body["equipo"]
+        body = request.json
 
-    game=str(body["game"])
+        print("\n===== BODY RECIBIDO =====")
+        print(body)
 
-    placement=int(body["placement"])
+        team = body["equipo"]
+        game = str(body["game"])
+        placement = int(body["placement"])
+        players = body["jugadores"]
+        kills = body["kills"]
 
-    players=body["jugadores"]
+        db = load()
 
-    kills=body["kills"]
+        if team not in db["equipos"]:
 
+            db["equipos"][team] = {
 
-    db=load()
-
-
-    if team not in db["equipos"]:
-
-        db["equipos"][team]={
-
-            "games":{},
-
-            "players":{}
-
-        }
-
-
-    if game in db["equipos"][team]["games"]:
-
-        return jsonify({
-
-            "error":"game repetida"
-
-        })
-
-
-    teamkills=sum(kills)
-
-    score=(25-placement)+teamkills
-
-
-    db["equipos"][team]["games"][game]={
-
-        "placement":placement,
-
-        "kills":teamkills,
-
-        "score":score
-
-    }
-
-
-    for i,name in enumerate(players):
-
-        if name not in db["equipos"][team]["players"]:
-
-            db["equipos"][team]["players"][name]={
-
-                "kills":0,
-
-                "matches":0
+                "games": {},
+                "players": {}
 
             }
 
-        db["equipos"][team]["players"][name]["kills"]+=kills[i]
+        if game in db["equipos"][team]["games"]:
 
-        db["equipos"][team]["players"][name]["matches"]+=1
+            return jsonify({
 
+                "error": "game repetida"
 
-    save(db)
+            }),400
 
-    return jsonify({"ok":True})
+        teamkills = sum(kills)
 
+        score = (25-placement) + teamkills
 
-###########################
-# WEB
-###########################
+        db["equipos"][team]["games"][game] = {
 
-@app.route("/")
+            "placement": placement,
+            "kills": teamkills,
+            "score": score
 
-def home():
+        }
 
-    db=load()
+        for i, name in enumerate(players):
 
-    equipos=db["equipos"]
+            if name not in db["equipos"][team]["players"]:
 
+                db["equipos"][team]["players"][name] = {
 
-    allgames=set()
+                    "kills": 0,
+                    "matches": 0
 
-    fragger={}
+                }
 
+            db["equipos"][team]["players"][name]["kills"] += kills[i]
+            db["equipos"][team]["players"][name]["matches"] += 1
 
-    ranking=[]
+        save(db)
 
+        print("\n===== DB GUARDADA =====")
+        print(load())
 
-    for team,data in equipos.items():
+        return jsonify({
 
-        total_score=0
-
-        total_kills=0
-
-
-        for g,info in data["games"].items():
-
-            allgames.add(g)
-
-            total_score+=info["score"]
-
-            total_kills+=info["kills"]
-
-
-        ranking.append({
-
-            "team":team,
-
-            "score":total_score,
-
-            "kills":total_kills,
-
-            "games":data["games"]
+            "ok": True
 
         })
 
+    except Exception as e:
 
-        for p,s in data["players"].items():
+        print(e)
+
+        return jsonify({
+
+            "error": str(e)
+
+        }),400
+
+
+################################################
+# VER JSON
+################################################
+
+@app.route("/data")
+def data():
+
+    return jsonify(load())
+
+
+################################################
+# WEB
+################################################
+
+@app.route("/")
+def home():
+
+    db = load()
+
+    equipos = db["equipos"]
+
+    allgames = set()
+
+    fragger = {}
+
+    ranking = []
+
+    for team, data in equipos.items():
+
+        totalscore = 0
+        totalkills = 0
+
+        for g, info in data["games"].items():
+
+            allgames.add(g)
+
+            totalscore += info["score"]
+            totalkills += info["kills"]
+
+        ranking.append({
+
+            "team": team,
+            "score": totalscore,
+            "kills": totalkills,
+            "games": data["games"]
+
+        })
+
+        for p, s in data["players"].items():
 
             if p not in fragger:
 
-                fragger[p]={
+                fragger[p] = {
 
                     "kills":0,
-
                     "team":team
 
                 }
 
-            fragger[p]["kills"]+=s["kills"]
+            fragger[p]["kills"] += s["kills"]
 
-
-    ranking=sorted(
-
+    ranking = sorted(
         ranking,
-
         key=lambda x:x["score"],
-
         reverse=True
-
     )
 
-
-    fraggers=sorted(
-
+    fraggers = sorted(
         fragger.items(),
-
         key=lambda x:x[1]["kills"],
-
         reverse=True
-
     )
 
+    allgames = sorted(list(allgames))
 
-    allgames=sorted(list(allgames))
-
-
-    html="""
+    html = """
 
 <html>
 
 <head>
 
+<title>MANYN ESPORTS</title>
+
 <style>
 
 body{
-
-background:#0a0a0a;
-
+background:#0b0b0b;
 color:white;
-
 font-family:Arial;
-
 margin:20px;
-
 }
 
 .wrapper{
-
 display:flex;
-
 gap:20px;
-
 align-items:flex-start;
-
 }
 
 .left{
-
 width:75%;
-
 overflow:auto;
-
 }
 
 .right{
-
 width:25%;
-
 }
 
 table{
-
-border-collapse:collapse;
-
 width:100%;
-
+border-collapse:collapse;
 background:#161616;
-
 }
 
 th{
-
 background:#3247ff;
-
-padding:8px;
-
-font-size:13px;
-
+padding:10px;
 }
 
 td{
-
 border:1px solid #333;
-
 padding:8px;
-
 text-align:center;
-
 }
 
 .team{
-
 background:#222;
-
 font-weight:bold;
-
 }
 
 .fragger{
-
 background:#111;
-
 }
 
 </style>
@@ -324,20 +284,17 @@ background:#111;
 
     for g in allgames:
 
-        html+=f"""
+        html += f"""
 
 <th>{g} K</th>
-
 <th>{g} P</th>
-
 <th>{g} S</th>
 
 """
 
-    html+="""
+    html += """
 
 <th>TOTAL SCORE</th>
-
 <th>TOTAL KILLS</th>
 
 </tr>
@@ -346,7 +303,7 @@ background:#111;
 
     for r in ranking:
 
-        html+=f"""
+        html += f"""
 
 <tr>
 
@@ -358,39 +315,40 @@ background:#111;
 
             if g in r["games"]:
 
-                game=r["games"][g]
+                game = r["games"][g]
 
-                html+=f"""
+                html += f"""
 
 <td>{game['kills']}</td>
-
 <td>{game['placement']}</td>
-
 <td>{game['score']}</td>
 
 """
 
             else:
 
-                html+="<td>-</td><td>-</td><td>-</td>"
+                html += """
 
+<td>-</td>
+<td>-</td>
+<td>-</td>
 
-        html+=f"""
+"""
+
+        html += f"""
 
 <td>{r['score']}</td>
-
 <td>{r['kills']}</td>
 
 </tr>
 
 """
 
+    html += """
 
-    html+="</table></div>"
+</table>
 
-
-    html+="""
-
+</div>
 
 <div class='right'>
 
@@ -399,9 +357,7 @@ background:#111;
 <tr>
 
 <th>PLAYER</th>
-
 <th>TEAM</th>
-
 <th>KILLS</th>
 
 </tr>
@@ -410,36 +366,41 @@ background:#111;
 
     for name,s in fraggers:
 
-        html+=f"""
+        html += f"""
 
 <tr class='fragger'>
 
 <td>{name}</td>
-
 <td>{s['team']}</td>
-
 <td>{s['kills']}</td>
 
 </tr>
 
 """
 
-    html+="</table></div></div></body></html>"
+    html += """
 
+</table>
+
+</div>
+
+</div>
+
+</body>
+
+</html>
+
+"""
 
     return html
 
 
-###########################
+################################################
 
-if __name__=="__main__":
+if __name__ == "__main__":
 
     app.run(
-
         host="0.0.0.0",
-
         port=10000,
-
         debug=True
-
     )
