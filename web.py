@@ -26,12 +26,36 @@ def guardar(data):
 def home():
     data = cargar()
 
-    colores = ["#1f2937", "#111827", "#0f172a", "#1c1917"]
+    jugadores_global = {}
+
+    # =========================
+    # APLANAR TODOS LOS EQUIPOS
+    # =========================
+    for equipo, info in data.items():
+        for jugador, stats in info.get("jugadores", {}).items():
+
+            if jugador not in jugadores_global:
+                jugadores_global[jugador] = {
+                    "kills": 0,
+                    "partidas": 0,
+                    "equipo": equipo
+                }
+
+            jugadores_global[jugador]["kills"] += stats.get("kills", 0)
+            jugadores_global[jugador]["partidas"] += stats.get("partidas", 0)
+
+    # =========================
+    # FRAGGER GLOBAL
+    # =========================
+    fragger = max(jugadores_global.items(), key=lambda x: x[1]["kills"], default=(None, None))
+
+    # ordenar ranking
+    ranking = sorted(jugadores_global.items(), key=lambda x: x[1]["kills"], reverse=True)
 
     html = """
     <html>
     <head>
-        <title>TORNEOS MANYN ESPORTS</title>
+        <title>TORNEO MANYN ESPORTS</title>
 
         <style>
             body{
@@ -41,24 +65,10 @@ def home():
                 text-align:center;
             }
 
-            .team-box{
-                margin:30px auto;
-                width:90%;
-                border-radius:12px;
-                padding:15px;
-            }
-
-            .team-title{
-                font-size:26px;
-                font-weight:bold;
-                padding:10px;
-                color:#ffd700;
-            }
-
             table{
                 margin:auto;
                 border-collapse:collapse;
-                width:100%;
+                width:85%;
             }
 
             th,td{
@@ -70,75 +80,58 @@ def home():
                 background:#222;
             }
 
-            .fragger-box{
-                margin-top:10px;
+            .fragger{
+                margin:20px auto;
+                padding:15px;
+                width:60%;
                 background:#111;
-                padding:10px;
-                border-radius:10px;
                 border:1px solid #444;
-            }
-
-            .fragger-title{
+                border-radius:10px;
                 color:#ff4d4d;
-                font-weight:bold;
+                font-size:18px;
             }
         </style>
     </head>
 
     <body>
 
-    <h1>🏆 TORNEOS MANYN ESPORTS</h1>
+    <h1>🏆 TORNEO MANYN ESPORTS</h1>
     """
 
-    i_color = 0
-
-    for equipo, info in data.items():
-
-        jugadores = info.get("jugadores", {})
-        puntos = info.get("puntos", 0)
-
-        sorted_players = sorted(jugadores.items(), key=lambda x: x[1], reverse=True)
-
-        fragger = sorted_players[0] if sorted_players else ("", 0)
-
-        bg = colores[i_color % len(colores)]
-        i_color += 1
-
+    # =========================
+    # FRAGGER GLOBAL
+    # =========================
+    if fragger[0]:
         html += f"""
-        <div class="team-box" style="background:{bg}">
-        
-            <div class="team-title">{equipo} - PUNTOS: {puntos}</div>
-
-            <table>
-                <tr>
-                    <th>Jugador</th>
-                    <th>Kills</th>
-                </tr>
-        """
-
-        for jugador, kills in sorted_players:
-            html += f"""
-                <tr>
-                    <td>{jugador}</td>
-                    <td>{kills}</td>
-                </tr>
-            """
-
-        html += """
-            </table>
-
-            <div class="fragger-box">
-                <div class="fragger-title">🔥 FRAGGER DEL EQUIPO</div>
-        """
-
-        html += f"""
-                <div>{fragger[0]} con {fragger[1]} kills</div>
-            </div>
-
+        <div class="fragger">
+            🔥 FRAGGER GLOBAL: <b>{fragger[0]}</b> con <b>{fragger[1]['kills']}</b> kills
         </div>
         """
 
-    html += "</body></html>"
+    # =========================
+    # TABLA GLOBAL
+    # =========================
+    html += """
+    <table>
+        <tr>
+            <th>Jugador</th>
+            <th>Equipo</th>
+            <th>Kills</th>
+            <th>Partidas</th>
+        </tr>
+    """
+
+    for jugador, stats in ranking:
+        html += f"""
+        <tr>
+            <td>{jugador}</td>
+            <td>{stats['equipo']}</td>
+            <td>{stats['kills']}</td>
+            <td>{stats['partidas']}</td>
+        </tr>
+        """
+
+    html += "</table></body></html>"
 
     return html
 
@@ -167,7 +160,15 @@ def report():
     for i in range(len(jugadores)):
         j = jugadores[i]
         k = kills[i]
-        data[equipo]["jugadores"][j] = data[equipo]["jugadores"].get(j, 0) + k
+
+        if j not in data[equipo]["jugadores"]:
+            data[equipo]["jugadores"][j] = {
+                "kills": 0,
+                "partidas": 0
+            }
+
+        data[equipo]["jugadores"][j]["kills"] += k
+        data[equipo]["jugadores"][j]["partidas"] += 1
 
     guardar(data)
 
