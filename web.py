@@ -2,7 +2,7 @@ from flask import Flask, jsonify, request
 import json
 import os
 
-app = Flask(**name**)
+app = Flask(__name__)
 
 ARCHIVO = "data.json"
 
