@@ -7,31 +7,26 @@ app = Flask(__name__)
 ARCHIVO = "data.json"
 
 # =========================
-# CARGAR DATOS
-# =========================
-def cargar_datos():
+def cargar():
     if not os.path.exists(ARCHIVO):
-        return []
-
+        return {}
     try:
         with open(ARCHIVO, "r", encoding="utf-8") as f:
             return json.load(f)
     except:
-        return []
+        return {}
 
 # =========================
-# GUARDAR DATOS
-# =========================
-def guardar_datos(datos):
+def guardar(data):
     with open(ARCHIVO, "w", encoding="utf-8") as f:
-        json.dump(datos, f, ensure_ascii=False, indent=4)
+        json.dump(data, f, ensure_ascii=False, indent=4)
 
-# =========================
-# HOME (WEB)
 # =========================
 @app.route("/")
 def home():
-    datos = cargar_datos()
+    data = cargar()
+
+    colores = ["#1f2937", "#111827", "#0f172a", "#1c1917"]
 
     html = """
     <html>
@@ -40,25 +35,34 @@ def home():
 
         <style>
             body{
-                background:#111;
+                background:#0b0f19;
                 color:white;
                 font-family:Arial;
                 text-align:center;
-                margin:20px;
             }
 
-            h1{
+            .team-box{
+                margin:30px auto;
+                width:90%;
+                border-radius:12px;
+                padding:15px;
+            }
+
+            .team-title{
+                font-size:26px;
+                font-weight:bold;
+                padding:10px;
                 color:#ffd700;
             }
 
             table{
                 margin:auto;
                 border-collapse:collapse;
-                width:95%;
+                width:100%;
             }
 
-            th, td{
-                border:1px solid #444;
+            th,td{
+                border:1px solid #333;
                 padding:10px;
             }
 
@@ -66,8 +70,17 @@ def home():
                 background:#222;
             }
 
-            tr:nth-child(even){
-                background:#1a1a1a;
+            .fragger-box{
+                margin-top:10px;
+                background:#111;
+                padding:10px;
+                border-radius:10px;
+                border:1px solid #444;
+            }
+
+            .fragger-title{
+                color:#ff4d4d;
+                font-weight:bold;
             }
         </style>
     </head>
@@ -75,96 +88,95 @@ def home():
     <body>
 
     <h1>🏆 TORNEOS MANYN ESPORTS</h1>
-
-    <table>
-        <tr>
-            <th>Equipo</th>
-            <th>Puesto</th>
-
-            <th>Jugador 1</th>
-            <th>Kills</th>
-
-            <th>Jugador 2</th>
-            <th>Kills</th>
-
-            <th>Jugador 3</th>
-            <th>Kills</th>
-
-            <th>Puntos</th>
-        </tr>
     """
 
-    for fila in datos:
+    i_color = 0
 
-        jugadores = fila.get("jugadores", [])
-        kills = fila.get("kills", [])
+    for equipo, info in data.items():
 
-        j1 = jugadores[0] if len(jugadores) > 0 else ""
-        j2 = jugadores[1] if len(jugadores) > 1 else ""
-        j3 = jugadores[2] if len(jugadores) > 2 else ""
+        jugadores = info.get("jugadores", {})
+        puntos = info.get("puntos", 0)
 
-        k1 = kills[0] if len(kills) > 0 else 0
-        k2 = kills[1] if len(kills) > 1 else 0
-        k3 = kills[2] if len(kills) > 2 else 0
+        sorted_players = sorted(jugadores.items(), key=lambda x: x[1], reverse=True)
+
+        fragger = sorted_players[0] if sorted_players else ("", 0)
+
+        bg = colores[i_color % len(colores)]
+        i_color += 1
 
         html += f"""
-        <tr>
-            <td>{fila.get('equipo')}</td>
-            <td>{fila.get('puesto')}</td>
+        <div class="team-box" style="background:{bg}">
+        
+            <div class="team-title">{equipo} - PUNTOS: {puntos}</div>
 
-            <td>{j1}</td>
-            <td>{k1}</td>
-
-            <td>{j2}</td>
-            <td>{k2}</td>
-
-            <td>{j3}</td>
-            <td>{k3}</td>
-
-            <td>{fila.get('puntos')}</td>
-        </tr>
+            <table>
+                <tr>
+                    <th>Jugador</th>
+                    <th>Kills</th>
+                </tr>
         """
 
-    html += """
-    </table>
+        for jugador, kills in sorted_players:
+            html += f"""
+                <tr>
+                    <td>{jugador}</td>
+                    <td>{kills}</td>
+                </tr>
+            """
 
-    </body>
-    </html>
-    """
+        html += """
+            </table>
+
+            <div class="fragger-box">
+                <div class="fragger-title">🔥 FRAGGER DEL EQUIPO</div>
+        """
+
+        html += f"""
+                <div>{fragger[0]} con {fragger[1]} kills</div>
+            </div>
+
+        </div>
+        """
+
+    html += "</body></html>"
 
     return html
 
 # =========================
-# REPORTES DEL BOT
-# =========================
 @app.route("/report", methods=["POST"])
 def report():
-    try:
-        body = request.json
+    body = request.json
 
-        datos = cargar_datos()
+    equipo = body.get("equipo")
+    puesto = int(body.get("puesto"))
+    jugadores = body.get("jugadores")
+    kills = body.get("kills")
 
-        datos.append({
-            "equipo": body.get("equipo"),
-            "puesto": body.get("puesto"),
-            "jugadores": body.get("jugadores"),
-            "kills": body.get("kills"),
-            "puntos": body.get("puntos")
-        })
+    puntos_base = (25 - puesto) + sum(kills)
 
-        guardar_datos(datos)
+    data = cargar()
 
-        return jsonify({"status": "ok"})
+    if equipo not in data:
+        data[equipo] = {
+            "puntos": 0,
+            "jugadores": {}
+        }
 
-    except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 400
+    data[equipo]["puntos"] += puntos_base
 
-# =========================
-# API JSON
+    for i in range(len(jugadores)):
+        j = jugadores[i]
+        k = kills[i]
+        data[equipo]["jugadores"][j] = data[equipo]["jugadores"].get(j, 0) + k
+
+    guardar(data)
+
+    return jsonify({"status": "ok"})
+
 # =========================
 @app.route("/data")
 def data():
-    return jsonify(cargar_datos())
+    return jsonify(cargar())
 
 # =========================
 if __name__ == "__main__":
