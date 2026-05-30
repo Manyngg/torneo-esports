@@ -7,9 +7,6 @@ app = Flask(__name__)
 DB = "data.json"
 
 
-# =========================
-# BASE DE DATOS
-# =========================
 def load():
     if not os.path.exists(DB):
         return {"equipos": {}}
@@ -28,51 +25,40 @@ def save(data):
 # =========================
 @app.route("/report", methods=["POST"])
 def report():
-    try:
-        body = request.json
+    body = request.json
 
-        if not body:
-            return jsonify({"error": "no json"}), 400
+    team = body["equipo"]
+    game = str(body["game"])
+    placement = int(body["placement"])
+    players = body["jugadores"]
+    kills = body["kills"]
 
-        team = body.get("equipo")
-        game = str(body.get("game"))
-        placement = int(body.get("placement", 0))
-        players = body.get("jugadores", [])
-        kills = body.get("kills", [])
+    db = load()
 
-        if not team or not game:
-            return jsonify({"error": "datos incompletos"}), 400
+    if team not in db["equipos"]:
+        db["equipos"][team] = {"games": {}, "players": {}}
 
-        db = load()
+    if game in db["equipos"][team]["games"]:
+        return jsonify({"error": "game repetida"}), 400
 
-        if team not in db["equipos"]:
-            db["equipos"][team] = {"games": {}, "players": {}}
+    teamkills = sum(kills)
+    score = (25 - placement) + teamkills
 
-        if game in db["equipos"][team]["games"]:
-            return jsonify({"error": "game repetida"}), 400
+    db["equipos"][team]["games"][game] = {
+        "placement": placement,
+        "kills": teamkills,
+        "score": score
+    }
 
-        teamkills = sum(kills)
-        score = (25 - placement) + teamkills
+    for i, p in enumerate(players):
+        if p not in db["equipos"][team]["players"]:
+            db["equipos"][team]["players"][p] = {"kills": 0}
 
-        db["equipos"][team]["games"][game] = {
-            "placement": placement,
-            "kills": teamkills,
-            "score": score
-        }
+        db["equipos"][team]["players"][p]["kills"] += kills[i]
 
-        for i, p in enumerate(players):
-            if p not in db["equipos"][team]["players"]:
-                db["equipos"][team]["players"][p] = {"kills": 0}
+    save(db)
 
-            db["equipos"][team]["players"][p]["kills"] += kills[i]
-
-        save(db)
-
-        return jsonify({"ok": True})
-
-    except Exception as e:
-        print("ERROR REPORT:", e)
-        return jsonify({"error": str(e)}), 500
+    return jsonify({"ok": True})
 
 
 # =========================
@@ -80,46 +66,42 @@ def report():
 # =========================
 @app.route("/corregir", methods=["POST"])
 def corregir():
-    try:
-        body = request.json
+    body = request.json
 
-        team = body.get("equipo")
-        game = str(body.get("game"))
-        placement = int(body.get("placement"))
-        players = body.get("jugadores", [])
-        kills = body.get("kills", [])
+    team = body["equipo"]
+    game = str(body["game"])
+    placement = int(body["placement"])
+    players = body["jugadores"]
+    kills = body["kills"]
 
-        db = load()
+    db = load()
 
-        if team not in db["equipos"]:
-            return jsonify({"error": "equipo no existe"}), 400
+    if team not in db["equipos"]:
+        return jsonify({"error": "equipo no existe"}), 400
 
-        # borrar partida anterior
-        if game in db["equipos"][team]["games"]:
-            del db["equipos"][team]["games"][game]
+    # borrar partida anterior
+    if game in db["equipos"][team]["games"]:
+        del db["equipos"][team]["games"][game]
 
-        teamkills = sum(kills)
-        score = (25 - placement) + teamkills
+    teamkills = sum(kills)
+    score = (25 - placement) + teamkills
 
-        db["equipos"][team]["games"][game] = {
-            "placement": placement,
-            "kills": teamkills,
-            "score": score
-        }
+    db["equipos"][team]["games"][game] = {
+        "placement": placement,
+        "kills": teamkills,
+        "score": score
+    }
 
-        for i, p in enumerate(players):
-            if p not in db["equipos"][team]["players"]:
-                db["equipos"][team]["players"][p] = {"kills": 0}
+    # recalcular jugadores de forma simple
+    for i, p in enumerate(players):
+        if p not in db["equipos"][team]["players"]:
+            db["equipos"][team]["players"][p] = {"kills": 0}
 
-            db["equipos"][team]["players"][p]["kills"] += kills[i]
+        db["equipos"][team]["players"][p]["kills"] += kills[i]
 
-        save(db)
+    save(db)
 
-        return jsonify({"ok": True})
-
-    except Exception as e:
-        print("ERROR CORREGIR:", e)
-        return jsonify({"error": str(e)}), 500
+    return jsonify({"ok": True})
 
 
 # =========================
@@ -133,6 +115,7 @@ def home():
     ranking = []
 
     for team, data in equipos.items():
+
         total_score = 0
         total_kills = 0
 
@@ -143,46 +126,19 @@ def home():
         ranking.append({
             "team": team,
             "score": total_score,
-            "kills": total_kills
+            "kills": total_kills,
+            "games": data["games"]
         })
 
     ranking = sorted(ranking, key=lambda x: x["score"], reverse=True)
 
-    html = """
-    <html>
-    <head>
-    <style>
-    body { background:#111; color:white; font-family:Arial; }
-    table { width:80%; margin:auto; border-collapse:collapse; }
-    th,td { border:1px solid #444; padding:10px; text-align:center; }
-    th { background:#3247ff; }
-    </style>
-    </head>
-    <body>
-    <h1 style="text-align:center;">🏆 TORNEO ESPORTS</h1>
-
-    <table>
-    <tr>
-    <th>TEAM</th>
-    <th>SCORE</th>
-    <th>KILLS</th>
-    </tr>
-    """
+    html = "<h1>🏆 TORNEO</h1><table border='1' cellpadding='5'>"
+    html += "<tr><th>TEAM</th><th>SCORE</th><th>KILLS</th></tr>"
 
     for r in ranking:
-        html += f"""
-        <tr>
-        <td>{r['team']}</td>
-        <td>{r['score']}</td>
-        <td>{r['kills']}</td>
-        </tr>
-        """
+        html += f"<tr><td>{r['team']}</td><td>{r['score']}</td><td>{r['kills']}</td></tr>"
 
-    html += """
-    </table>
-    </body>
-    </html>
-    """
+    html += "</table>"
 
     return html
 
