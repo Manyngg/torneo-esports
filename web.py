@@ -21,7 +21,7 @@ def save(data):
 
 
 # =========================
-# REPORTES
+# REPORT
 # =========================
 @app.route("/report", methods=["POST"])
 def report():
@@ -85,7 +85,6 @@ def corregir():
         if team not in db["equipos"]:
             return jsonify({"error": "equipo no existe"}), 400
 
-        # borrar partida anterior
         if game in db["equipos"][team]["games"]:
             del db["equipos"][team]["games"][game]
 
@@ -114,12 +113,20 @@ def corregir():
 
 
 # =========================
-# WEB
+# WEB (TU TABLA ORIGINAL RESTAURADA)
 # =========================
 @app.route("/")
 def home():
     db = load()
     equipos = db["equipos"]
+
+    allgames = set()
+
+    for team, data in equipos.items():
+        for g in data["games"]:
+            allgames.add(g)
+
+    allgames = sorted(list(allgames))
 
     ranking = []
 
@@ -135,46 +142,113 @@ def home():
         ranking.append({
             "team": team,
             "score": total_score,
-            "kills": total_kills
+            "kills": total_kills,
+            "games": data["games"]
         })
 
     ranking = sorted(ranking, key=lambda x: x["score"], reverse=True)
 
     html = """
-    <html>
-    <head>
-    <style>
-    body { background:#111; color:white; font-family:Arial; }
-    table { width:80%; margin:auto; border-collapse:collapse; }
-    th,td { border:1px solid #444; padding:10px; text-align:center; }
-    th { background:#3247ff; }
-    </style>
-    </head>
-    <body>
-    <h1 style="text-align:center;">🏆 TORNEO ESPORTS</h1>
+<html>
+<head>
+<style>
+body{
+background:#111;
+color:white;
+font-family:Arial;
+margin:20px;
+}
 
-    <table>
-    <tr>
-    <th>TEAM</th>
-    <th>SCORE</th>
-    <th>KILLS</th>
-    </tr>
-    """
+table{
+width:100%;
+border-collapse:collapse;
+margin-bottom:30px;
+}
 
-    for r in ranking:
-        html += f"""
-        <tr>
-        <td>{r['team']}</td>
-        <td>{r['score']}</td>
-        <td>{r['kills']}</td>
-        </tr>
-        """
+th{
+background:#3247ff;
+padding:8px;
+border:1px solid #555;
+}
+
+td{
+border:1px solid #444;
+padding:6px;
+text-align:center;
+}
+
+.teamtitle{
+background:#222;
+font-weight:bold;
+}
+
+.score{
+background:#2d2d2d;
+font-weight:bold;
+}
+</style>
+</head>
+<body>
+
+<h1>🏆 MANYN ESPORTS</h1>
+
+<table>
+<tr>
+<th rowspan='2'>TEAM</th>
+"""
+
+    # headers games
+    for g in allgames:
+        html += f"<th colspan='4'>GAME {g}</th>"
 
     html += """
-    </table>
-    </body>
-    </html>
-    """
+<th rowspan='2'>TOTAL SCORE</th>
+<th rowspan='2'>TOTAL KILLS</th>
+</tr>
+<tr>
+"""
+
+    for g in allgames:
+        html += """
+<th>KILLS</th>
+<th>PLACEMENT</th>
+<th>TEAM KILLS</th>
+<th>SCORE</th>
+"""
+
+    html += "</tr>"
+
+    # teams
+    for r in ranking:
+
+        html += f"<tr><td class='teamtitle'>{r['team']}</td>"
+
+        for g in allgames:
+
+            if g in r["games"]:
+                game = r["games"][g]
+
+                html += f"""
+<td>{game['kills']}</td>
+<td>{game['placement']}</td>
+<td>{game['kills']}</td>
+<td class='score'>{game['score']}</td>
+"""
+            else:
+                html += "<td>-</td><td>-</td><td>-</td><td>-</td>"
+
+        html += f"""
+<td>{r['score']}</td>
+<td>{r['kills']}</td>
+</tr>
+"""
+
+    html += """
+</table>
+
+</body>
+</html>
+"""
 
     return html
 
