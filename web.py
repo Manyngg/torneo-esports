@@ -1,28 +1,580 @@
-fragger = {}
+from flask import Flask, request, jsonify
+import json
+import os
 
-for team,data in equipos.items():
+app = Flask(__name__)
 
-    for player,stats in data["players"].items():
+DB="data.json"
 
-        if player not in fragger:
+#########################################
 
-            fragger[player] = {
+def load():
 
-                "team":team,
+    if not os.path.exists(DB):
+
+        return {
+
+            "equipos":{}
+
+        }
+
+    with open(
+
+        DB,
+
+        "r",
+
+        encoding="utf8"
+
+    ) as f:
+
+        return json.load(f)
+
+
+def save(data):
+
+    with open(
+
+        DB,
+
+        "w",
+
+        encoding="utf8"
+
+    ) as f:
+
+        json.dump(
+
+            data,
+
+            f,
+
+            indent=4,
+
+            ensure_ascii=False
+
+        )
+
+#########################################
+# REPORT API
+#########################################
+
+@app.route(
+
+"/report",
+
+methods=["POST"]
+
+)
+
+def report():
+
+    body=request.json
+
+    team=body["equipo"]
+
+    game=str(
+
+        body["game"]
+
+    )
+
+    placement=int(
+
+        body["placement"]
+
+    )
+
+    players=body["jugadores"]
+
+    kills=body["kills"]
+
+    db=load()
+
+    if team not in db["equipos"]:
+
+        db["equipos"][team]={
+
+            "games":{},
+
+            "players":{}
+
+        }
+
+    if game in db["equipos"][team]["games"]:
+
+        return jsonify({
+
+            "error":"game repetida"
+
+        }),400
+
+    teamkills=sum(kills)
+
+    score=(25-placement)+teamkills
+
+    db["equipos"][team]["games"][game]={
+
+        "placement":placement,
+
+        "kills":teamkills,
+
+        "score":score
+
+    }
+
+    for i,p in enumerate(players):
+
+        if p not in db["equipos"][team]["players"]:
+
+            db["equipos"][team]["players"][p]={
 
                 "kills":0
 
             }
 
-        fragger[player]["kills"] += stats["kills"]
+        db["equipos"][team]["players"][p]["kills"] += kills[i]
 
+    save(db)
 
-fraggers = sorted(
+    return jsonify({
 
-    fragger.items(),
+        "ok":True
 
-    key=lambda x:x[1]["kills"],
+    })
 
-    reverse=True
+#########################################
+# WEB
+#########################################
 
-)
+@app.route("/")
+
+def home():
+
+    db=load()
+
+    equipos=db["equipos"]
+
+#########################################
+# FRAGGER TABLE DATA
+#########################################
+
+    fragger={}
+
+    for team,data in equipos.items():
+
+        for player,stats in data["players"].items():
+
+            if player not in fragger:
+
+                fragger[player]={
+
+                    "team":team,
+
+                    "kills":0
+
+                }
+
+            fragger[player]["kills"] += stats["kills"]
+
+    fraggers=sorted(
+
+        fragger.items(),
+
+        key=lambda x:x[1]["kills"],
+
+        reverse=True
+
+    )
+
+#########################################
+
+    allgames=set()
+
+    for team,data in equipos.items():
+
+        for g in data["games"]:
+
+            allgames.add(g)
+
+    allgames=sorted(
+
+        list(allgames)
+
+    )
+
+#########################################
+
+    html="""
+
+<html>
+
+<head>
+
+<style>
+
+body{
+
+background:#111;
+
+color:white;
+
+font-family:Arial;
+
+margin:20px;
+
+}
+
+table{
+
+width:100%;
+
+border-collapse:collapse;
+
+margin-bottom:30px;
+
+}
+
+th{
+
+background:#3247ff;
+
+padding:8px;
+
+border:1px solid #555;
+
+}
+
+td{
+
+border:1px solid #444;
+
+padding:6px;
+
+text-align:center;
+
+}
+
+.teamtitle{
+
+background:#222;
+
+font-weight:bold;
+
+}
+
+.score{
+
+background:#2d2d2d;
+
+font-weight:bold;
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h1>
+
+🏆 MANYN ESPORTS
+
+</h1>
+
+<table>
+
+<tr>
+
+<th rowspan='2'>
+
+TEAM
+
+</th>
+
+"""
+
+#########################################
+# HEADERS GAME
+#########################################
+
+    for g in allgames:
+
+        html += f"""
+
+<th colspan='4'>
+
+GAME {g}
+
+</th>
+
+"""
+
+    html += """
+
+<th rowspan='2'>
+
+TOTAL SCORE
+
+</th>
+
+<th rowspan='2'>
+
+TOTAL KILLS
+
+</th>
+
+</tr>
+
+<tr>
+
+"""
+
+    for g in allgames:
+
+        html += """
+
+<th>
+
+KILLS
+
+</th>
+
+<th>
+
+PLACEMENT
+
+</th>
+
+<th>
+
+TEAM KILLS
+
+</th>
+
+<th>
+
+SCORE
+
+</th>
+
+"""
+
+    html += "</tr>"
+
+#########################################
+# TEAMS
+#########################################
+
+    ranking=[]
+
+    for team,data in equipos.items():
+
+        total_score=0
+
+        total_kills=0
+
+        for g,info in data["games"].items():
+
+            total_score+=info["score"]
+
+            total_kills+=info["kills"]
+
+        ranking.append({
+
+            "team":team,
+
+            "score":total_score,
+
+            "kills":total_kills,
+
+            "games":data["games"]
+
+        })
+
+    ranking=sorted(
+
+        ranking,
+
+        key=lambda x:x["score"],
+
+        reverse=True
+
+    )
+
+#########################################
+
+    for r in ranking:
+
+        html += f"""
+
+<tr>
+
+<td class='teamtitle'>
+
+{r['team']}
+
+</td>
+
+"""
+
+        for g in allgames:
+
+            if g in r["games"]:
+
+                game=r["games"][g]
+
+                html += f"""
+
+<td>
+
+{game['kills']}
+
+</td>
+
+<td>
+
+{game['placement']}
+
+</td>
+
+<td>
+
+{game['kills']}
+
+</td>
+
+<td class='score'>
+
+{game['score']}
+
+</td>
+
+"""
+
+            else:
+
+                html += """
+
+<td>-</td>
+
+<td>-</td>
+
+<td>-</td>
+
+<td>-</td>
+
+"""
+
+        html += f"""
+
+<td>
+
+{r['score']}
+
+</td>
+
+<td>
+
+{r['kills']}
+
+</td>
+
+</tr>
+
+"""
+
+#########################################
+# FRAGGER TABLE
+#########################################
+
+    html += """
+
+</table>
+
+<h2>
+
+🔥 FRAGGER TABLE
+
+</h2>
+
+<table>
+
+<tr>
+
+<th>
+
+PLAYER
+
+</th>
+
+<th>
+
+TEAM
+
+</th>
+
+<th>
+
+TOTAL KILLS
+
+</th>
+
+</tr>
+
+"""
+
+    for player,stats in fraggers:
+
+        html += f"""
+
+<tr>
+
+<td>
+
+{player}
+
+</td>
+
+<td>
+
+{stats['team']}
+
+</td>
+
+<td>
+
+{stats['kills']}
+
+</td>
+
+</tr>
+
+"""
+
+    html += """
+
+</table>
+
+</body>
+
+</html>
+
+"""
+
+    return html
+
+#########################################
+
+if __name__=="__main__":
+
+    app.run(
+
+        host="0.0.0.0",
+
+        port=10000,
+
+        debug=True
+
+    )
