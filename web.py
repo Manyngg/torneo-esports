@@ -7,9 +7,6 @@ app = Flask(__name__)
 DB = "data.json"
 
 
-# =========================
-# BASE DE DATOS
-# =========================
 def load():
     if not os.path.exists(DB):
         return {"equipos": {}}
@@ -31,17 +28,11 @@ def report():
     try:
         body = request.json
 
-        if not body:
-            return jsonify({"error": "no json"}), 400
-
-        team = body.get("equipo")
-        game = str(body.get("game"))
-        placement = int(body.get("placement", 0))
-        players = body.get("jugadores", [])
-        kills = body.get("kills", [])
-
-        if not team or not game:
-            return jsonify({"error": "datos incompletos"}), 400
+        team = body["equipo"]
+        game = str(body["game"])
+        placement = int(body["placement"])
+        players = body["jugadores"]
+        kills = body["kills"]
 
         db = load()
 
@@ -83,11 +74,11 @@ def corregir():
     try:
         body = request.json
 
-        team = body.get("equipo")
-        game = str(body.get("game"))
-        placement = int(body.get("placement"))
-        players = body.get("jugadores", [])
-        kills = body.get("kills", [])
+        team = body["equipo"]
+        game = str(body["game"])
+        placement = int(body["placement"])
+        players = body["jugadores"]
+        kills = body["kills"]
 
         db = load()
 
@@ -133,6 +124,7 @@ def home():
     ranking = []
 
     for team, data in equipos.items():
+
         total_score = 0
         total_kills = 0
 
