@@ -279,7 +279,7 @@ font-weight:bold;
 
 <h1>
 
-🏆 MANYN ESPORTS
+🏆 Liga CBS
 
 </h1>
 
