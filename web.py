@@ -1,3 +1,4 @@
+```python
 from flask import Flask, request, jsonify
 import json
 import os
@@ -111,7 +112,23 @@ def report():
 
     teamkills=sum(kills)
 
-    score=(25-placement)+teamkills
+    if placement == 1:
+
+        mult=1.6
+
+    elif placement <=5:
+
+        mult=1.4
+
+    elif placement <=10:
+
+        mult=1.2
+
+    else:
+
+        mult=1
+
+    score=round(teamkills*mult,2)
 
     db["equipos"][team]["games"][game]={
 
@@ -155,8 +172,6 @@ def home():
 
     equipos=db["equipos"]
 
-#########################################
-# FRAGGER TABLE DATA
 #########################################
 
     fragger={}
@@ -214,61 +229,38 @@ def home():
 <style>
 
 body{
-
 background:#111;
-
 color:white;
-
 font-family:Arial;
-
 margin:20px;
-
 }
 
 table{
-
 width:100%;
-
 border-collapse:collapse;
-
 margin-bottom:30px;
-
 }
 
 th{
-
 background:#3247ff;
-
 padding:8px;
-
 border:1px solid #555;
-
 }
 
 td{
-
 border:1px solid #444;
-
 padding:6px;
-
 text-align:center;
-
 }
 
 .teamtitle{
-
 background:#222;
-
 font-weight:bold;
-
 }
 
 .score{
-
 background:#2d2d2d;
-
 font-weight:bold;
-
 }
 
 </style>
@@ -287,17 +279,11 @@ font-weight:bold;
 
 <tr>
 
-<th rowspan='2'>
+<th rowspan='2'>POS</th>
 
-TEAM
-
-</th>
+<th rowspan='2'>TEAM</th>
 
 """
-
-#########################################
-# HEADERS GAME
-#########################################
 
     for g in allgames:
 
@@ -313,17 +299,9 @@ GAME {g}
 
     html += """
 
-<th rowspan='2'>
+<th rowspan='2'>TOTAL SCORE</th>
 
-TOTAL SCORE
-
-</th>
-
-<th rowspan='2'>
-
-TOTAL KILLS
-
-</th>
+<th rowspan='2'>TOTAL KILLS</th>
 
 </tr>
 
@@ -335,36 +313,18 @@ TOTAL KILLS
 
         html += """
 
-<th>
+<th>KILLS</th>
 
-KILLS
+<th>PLACEMENT</th>
 
-</th>
+<th>TEAM KILLS</th>
 
-<th>
-
-PLACEMENT
-
-</th>
-
-<th>
-
-TEAM KILLS
-
-</th>
-
-<th>
-
-SCORE
-
-</th>
+<th>SCORE</th>
 
 """
 
     html += "</tr>"
 
-#########################################
-# TEAMS
 #########################################
 
     ranking=[]
@@ -372,23 +332,18 @@ SCORE
     for team,data in equipos.items():
 
         total_score=0
-
         total_kills=0
 
         for g,info in data["games"].items():
 
             total_score+=info["score"]
-
             total_kills+=info["kills"]
 
         ranking.append({
 
             "team":team,
-
             "score":total_score,
-
             "kills":total_kills,
-
             "games":data["games"]
 
         })
@@ -405,11 +360,15 @@ SCORE
 
 #########################################
 
+    posicion=1
+
     for r in ranking:
 
         html += f"""
 
 <tr>
+
+<td>{posicion}</td>
 
 <td class='teamtitle'>
 
@@ -419,6 +378,8 @@ SCORE
 
 """
 
+        posicion+=1
+
         for g in allgames:
 
             if g in r["games"]:
@@ -427,29 +388,13 @@ SCORE
 
                 html += f"""
 
-<td>
+<td>{game['kills']}</td>
 
-{game['kills']}
+<td>{game['placement']}</td>
 
-</td>
+<td>{game['kills']}</td>
 
-<td>
-
-{game['placement']}
-
-</td>
-
-<td>
-
-{game['kills']}
-
-</td>
-
-<td class='score'>
-
-{game['score']}
-
-</td>
+<td class='score'>{game['score']}</td>
 
 """
 
@@ -469,24 +414,14 @@ SCORE
 
         html += f"""
 
-<td>
+<td>{r['score']}</td>
 
-{r['score']}
-
-</td>
-
-<td>
-
-{r['kills']}
-
-</td>
+<td>{r['kills']}</td>
 
 </tr>
 
 """
 
-#########################################
-# FRAGGER TABLE
 #########################################
 
     html += """
@@ -503,23 +438,11 @@ SCORE
 
 <tr>
 
-<th>
+<th>PLAYER</th>
 
-PLAYER
+<th>TEAM</th>
 
-</th>
-
-<th>
-
-TEAM
-
-</th>
-
-<th>
-
-TOTAL KILLS
-
-</th>
+<th>TOTAL KILLS</th>
 
 </tr>
 
@@ -531,23 +454,11 @@ TOTAL KILLS
 
 <tr>
 
-<td>
+<td>{player}</td>
 
-{player}
+<td>{stats['team']}</td>
 
-</td>
-
-<td>
-
-{stats['team']}
-
-</td>
-
-<td>
-
-{stats['kills']}
-
-</td>
+<td>{stats['kills']}</td>
 
 </tr>
 
@@ -578,3 +489,4 @@ if __name__=="__main__":
         debug=True
 
     )
+```
