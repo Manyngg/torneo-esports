@@ -6,7 +6,7 @@ app = Flask(__name__)
 
 DB="data.json"
 
-#########################################
+##################################################
 
 def load():
 
@@ -30,6 +30,7 @@ def load():
 
         return json.load(f)
 
+##################################################
 
 def save(data):
 
@@ -55,9 +56,9 @@ def save(data):
 
         )
 
-#########################################
+##################################################
 # REPORT API
-#########################################
+##################################################
 
 @app.route(
 
@@ -73,11 +74,7 @@ def report():
 
     team=body["equipo"]
 
-    game=str(
-
-        body["game"]
-
-    )
+    game=str(body["game"])
 
     placement=int(
 
@@ -91,6 +88,8 @@ def report():
 
     db=load()
 
+##################################################
+
     if team not in db["equipos"]:
 
         db["equipos"][team]={
@@ -101,6 +100,8 @@ def report():
 
         }
 
+##################################################
+
     if game in db["equipos"][team]["games"]:
 
         return jsonify({
@@ -109,11 +110,11 @@ def report():
 
         }),400
 
+##################################################
+
     teamkills=sum(kills)
 
-#########################################
-# MULTIPLICADORES
-#########################################
+##################################################
 
     if placement == 1:
 
@@ -131,7 +132,7 @@ def report():
 
         mult=1
 
-#########################################
+##################################################
 
     score=round(
 
@@ -141,7 +142,7 @@ def report():
 
     )
 
-#########################################
+##################################################
 
     db["equipos"][team]["games"][game]={
 
@@ -149,11 +150,23 @@ def report():
 
         "kills":teamkills,
 
-        "score":score
+        "score":score,
+
+        "players":{
+
+            players[i]:kills[i]
+
+            for i in range(
+
+                len(players)
+
+            )
+
+        }
 
     }
 
-#########################################
+##################################################
 
     for i,p in enumerate(players):
 
@@ -167,19 +180,15 @@ def report():
 
         db["equipos"][team]["players"][p]["kills"] += kills[i]
 
-#########################################
+##################################################
 
     save(db)
 
-    return jsonify({
+    return jsonify({"ok":True})
 
-        "ok":True
-
-    })
-
-#########################################
+##################################################
 # WEB
-#########################################
+##################################################
 
 @app.route("/")
 
@@ -189,7 +198,23 @@ def home():
 
     equipos=db["equipos"]
 
-#########################################
+##################################################
+
+    allgames=set()
+
+    for team,data in equipos.items():
+
+        for g in data["games"]:
+
+            allgames.add(g)
+
+    allgames=sorted(
+
+        list(allgames)
+
+    )
+
+##################################################
 
     fragger={}
 
@@ -209,7 +234,7 @@ def home():
 
             fragger[player]["kills"] += stats["kills"]
 
-#########################################
+##################################################
 
     fraggers=sorted(
 
@@ -221,138 +246,7 @@ def home():
 
     )
 
-#########################################
-
-    allgames=set()
-
-    for team,data in equipos.items():
-
-        for g in data["games"]:
-
-            allgames.add(g)
-
-#########################################
-
-    allgames=sorted(
-
-        list(allgames)
-
-    )
-
-#########################################
-
-    html="""
-
-<html>
-
-<head>
-
-<style>
-
-body{
-background:#111;
-color:white;
-font-family:Arial;
-margin:20px;
-}
-
-table{
-width:100%;
-border-collapse:collapse;
-margin-bottom:30px;
-}
-
-th{
-background:#3247ff;
-padding:8px;
-border:1px solid #555;
-}
-
-td{
-border:1px solid #444;
-padding:6px;
-text-align:center;
-}
-
-.teamtitle{
-background:#222;
-font-weight:bold;
-}
-
-.score{
-background:#2d2d2d;
-font-weight:bold;
-}
-
-</style>
-
-</head>
-
-<body>
-
-<h1>
-
-🏆 Liga CBS
-
-</h1>
-
-<table>
-
-<tr>
-
-<th rowspan='2'>POS</th>
-
-<th rowspan='2'>TEAM</th>
-
-"""
-
-#########################################
-
-    for g in allgames:
-
-        html += f"""
-
-<th colspan='3'>
-
-GAME {g}
-
-</th>
-
-"""
-
-#########################################
-
-    html += """
-
-<th rowspan='2'>TOTAL SCORE</th>
-
-<th rowspan='2'>TOTAL KILLS</th>
-
-</tr>
-
-<tr>
-
-"""
-
-#########################################
-
-    for g in allgames:
-
-        html += """
-
-<th>PLACEMENT</th>
-
-<th>KILLS</th>
-
-<th>SCORE</th>
-
-"""
-
-#########################################
-
-    html += "</tr>"
-
-#########################################
+##################################################
 
     ranking=[]
 
@@ -364,18 +258,15 @@ GAME {g}
 
         for g,info in data["games"].items():
 
-            total_score += info["score"]
+            total_score+=info["score"]
 
-            total_kills += info["kills"]
+            total_kills+=info["kills"]
 
         ranking.append({
 
             "team":team,
 
-            "score":round(
-                total_score,
-                2
-            ),
+            "score":round(total_score,2),
 
             "kills":total_kills,
 
@@ -383,7 +274,7 @@ GAME {g}
 
         })
 
-#########################################
+##################################################
 
     ranking=sorted(
 
@@ -395,29 +286,213 @@ GAME {g}
 
     )
 
-#########################################
+##################################################
+
+    html="""
+
+<html>
+
+<head>
+
+<meta http-equiv='refresh' content='30'>
+
+<style>
+
+body{
+background:#0f0f0f;
+color:white;
+font-family:Arial;
+margin:20px;
+}
+
+h1{
+color:#ffe600;
+}
+
+.stats{
+display:flex;
+gap:20px;
+margin-bottom:20px;
+}
+
+.box{
+background:#1d1d1d;
+padding:12px;
+border-radius:10px;
+box-shadow:0 0 15px rgba(0,255,255,.2);
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+margin-bottom:30px;
+}
+
+th{
+background:#3247ff;
+padding:10px;
+}
+
+td{
+padding:8px;
+border:1px solid #333;
+text-align:center;
+}
+
+.top1{
+background:#594400;
+}
+
+.top2{
+background:#3b3b3b;
+}
+
+.top3{
+background:#5d3f21;
+}
+
+.playerbox{
+font-size:12px;
+line-height:1.5;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h1>🏆 Liga CBS</h1>
+
+<div class='stats'>
+
+<div class='box'>
+Equipos:
+<br>
+""" + str(len(equipos)) + """
+
+</div>
+
+<div class='box'>
+Partidas:
+<br>
+""" + str(len(allgames)) + """
+
+</div>
+
+</div>
+
+<table>
+
+<tr>
+
+<th>POS</th>
+
+<th>TEAM</th>
+
+<th>PLAYERS</th>
+
+"""
+
+##################################################
+
+    for g in allgames:
+
+        html += f"""
+
+<th>G{g} POS</th>
+
+<th>G{g} KILLS</th>
+
+<th>G{g} SCORE</th>
+
+"""
+
+##################################################
+
+    html += """
+
+<th>TOTAL SCORE</th>
+
+<th>TOTAL KILLS</th>
+
+</tr>
+
+"""
+
+##################################################
 
     posicion=1
 
     for r in ranking:
 
+        clase=""
+
+        medal=""
+
+        if posicion==1:
+
+            medal="🥇"
+
+            clase="top1"
+
+        elif posicion==2:
+
+            medal="🥈"
+
+            clase="top2"
+
+        elif posicion==3:
+
+            medal="🥉"
+
+            clase="top3"
+
+##################################################
+
+        playershtml=""
+
+        teamplayers=equipos[
+
+            r["team"]
+
+        ]["players"]
+
+        for p,s in teamplayers.items():
+
+            playershtml += f"""
+
+{p}: {s['kills']}<br>
+
+"""
+
+##################################################
+
         html += f"""
 
-<tr>
+<tr class='{clase}'>
 
-<td>{posicion}</td>
+<td>
 
-<td class='teamtitle'>
+{medal} {posicion}
+
+</td>
+
+<td>
 
 {r['team']}
 
 </td>
 
+<td class='playerbox'>
+
+{playershtml}
+
+</td>
+
 """
 
-        posicion += 1
-
-#########################################
+##################################################
 
         for g in allgames:
 
@@ -431,11 +506,7 @@ GAME {g}
 
 <td>{game['kills']}</td>
 
-<td class='score'>
-
-{game['score']}
-
-</td>
+<td>{game['score']}</td>
 
 """
 
@@ -451,7 +522,7 @@ GAME {g}
 
 """
 
-#########################################
+##################################################
 
         html += f"""
 
@@ -471,17 +542,15 @@ GAME {g}
 
 """
 
-#########################################
+        posicion+=1
+
+##################################################
 
     html += """
 
 </table>
 
-<h2>
-
-🔥 FRAGGER TABLE
-
-</h2>
+<h2>🔥 FRAGGER TABLE</h2>
 
 <table>
 
@@ -491,13 +560,13 @@ GAME {g}
 
 <th>TEAM</th>
 
-<th>TOTAL KILLS</th>
+<th>KILLS</th>
 
 </tr>
 
 """
 
-#########################################
+##################################################
 
     for player,stats in fraggers:
 
@@ -515,7 +584,7 @@ GAME {g}
 
 """
 
-#########################################
+##################################################
 
     html += """
 
@@ -529,7 +598,7 @@ GAME {g}
 
     return html
 
-#########################################
+##################################################
 
 if __name__=="__main__":
 
