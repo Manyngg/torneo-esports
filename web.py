@@ -69,11 +69,9 @@ def report():
     for i, p in enumerate(players):
         if p not in db["equipos"][team]["players"]:
             db["equipos"][team]["players"][p] = {"kills": 0}
-
         db["equipos"][team]["players"][p]["kills"] += kills[i]
 
     save(db)
-
     return jsonify({"ok": True})
 
 #################################################
@@ -118,11 +116,9 @@ def modificar():
     for i, p in enumerate(players):
         if p not in db["equipos"][team]["players"]:
             db["equipos"][team]["players"][p] = {"kills": 0}
-
         db["equipos"][team]["players"][p]["kills"] += kills[i]
 
     save(db)
-
     return jsonify({"ok": True})
 
 #################################################
@@ -160,7 +156,15 @@ def home():
 
     ranking = sorted(ranking, key=lambda x: x["score"], reverse=True)
 
-    colors = ["#00ff66", "#d6ff00", "#00ffaa", "#aaff00", "#66ff00", "#ffe600"]
+    fragger = {}
+
+    for team, data in equipos.items():
+        for p, s in data["players"].items():
+            if p not in fragger:
+                fragger[p] = {"team": team, "kills": 0}
+            fragger[p]["kills"] += s["kills"]
+
+    fraggers = sorted(fragger.items(), key=lambda x: x[1]["kills"], reverse=True)
 
     html = """
 <html>
@@ -170,51 +174,61 @@ def home():
 <style>
 
 body{
-background:#090909;
-color:white;
+background:white;
+color:black;
 font-family:Arial;
 margin:20px;
 }
 
 h1{
-color:#d6ff00;
-text-shadow:0 0 20px #d6ff00;
+color:#111;
 }
 
-/* 🎮 TABLA WARZONE STYLE */
+/* 🟢🟡 TABLAS GAMER */
 table{
 width:100%;
 border-collapse:collapse;
 margin-bottom:30px;
-
-/* fondo blanco */
 background:white;
-
-/* imagen tipo Warzone */
-background-image:url("https://images.unsplash.com/photo-1605902711622-cfb43c4437d1");
-background-size:cover;
-background-position:center;
-background-repeat:no-repeat;
+border:2px solid #00ff66;
+box-shadow:0 0 10px #00ff66;
 }
 
-th,td{
+th{
+background:#d6ff00;
+color:black;
+border:1px solid #00ff66;
+padding:10px;
+text-transform:uppercase;
+font-weight:bold;
+}
+
+td{
+border:1px solid #00ff66;
 padding:8px;
 text-align:center;
-border:1px solid #ddd;
 color:black;
-
-/* fondo semi transparente para leer bien */
-background:rgba(255,255,255,0.85);
 }
 
 .team{
-color:#00aa44;
+color:#00ff66;
 font-weight:bold;
+text-shadow:0 0 5px #00ff66;
 }
 
 .players{
 font-size:12px;
 line-height:1.5;
+}
+
+h2{
+color:#00ff66;
+text-shadow:0 0 8px #00ff66;
+}
+
+tr:hover{
+background:#f9ffe0;
+transition:0.2s;
 }
 
 </style>
@@ -277,6 +291,29 @@ line-height:1.5;
 </tr>
 """
         pos += 1
+
+    html += """
+</table>
+
+<h2>🔥 FRAGGER TABLE</h2>
+
+<table>
+
+<tr>
+<th>PLAYER</th>
+<th>TEAM</th>
+<th>KILLS</th>
+</tr>
+"""
+
+    for p, s in fraggers:
+        html += f"""
+<tr>
+<td>{p}</td>
+<td>{s['team']}</td>
+<td>{s['kills']}</td>
+</tr>
+"""
 
     html += """
 </table>
