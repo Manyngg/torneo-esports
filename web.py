@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify
 import json
 import os
 
-app = Flask(__name__, static_folder="static")
+app = Flask(__name__)
 
 DB = "data.json"
 
@@ -32,7 +32,6 @@ def calcular_score(placement, teamkills):
         mult = 1.2
     else:
         mult = 1
-
     return round(teamkills * mult, 2)
 
 #################################################
@@ -161,19 +160,6 @@ def home():
 
     ranking = sorted(ranking, key=lambda x: x["score"], reverse=True)
 
-    fragger = {}
-
-    for team, data in equipos.items():
-        for p, s in data["players"].items():
-            total = s["kills"]
-
-            if p not in fragger:
-                fragger[p] = {"team": team, "kills": 0}
-
-            fragger[p]["kills"] += total
-
-    fraggers = sorted(fragger.items(), key=lambda x: x[1]["kills"], reverse=True)
-
     colors = ["#00ff66", "#d6ff00", "#00ffaa", "#aaff00", "#66ff00", "#ffe600"]
 
     html = """
@@ -188,13 +174,6 @@ background:#090909;
 color:white;
 font-family:Arial;
 margin:20px;
-
-/* 🔥 LOGO DE FONDO */
-background-image: url("/static/logo.png");
-background-repeat: no-repeat;
-background-position: center;
-background-size: 40%;
-background-attachment: fixed;
 }
 
 h1{
@@ -202,22 +181,34 @@ color:#d6ff00;
 text-shadow:0 0 20px #d6ff00;
 }
 
+/* 🎮 TABLA WARZONE STYLE */
 table{
 width:100%;
 border-collapse:collapse;
 margin-bottom:30px;
-position:relative;
-z-index:1;
+
+/* fondo blanco */
+background:white;
+
+/* imagen tipo Warzone */
+background-image:url("https://images.unsplash.com/photo-1605902711622-cfb43c4437d1");
+background-size:cover;
+background-position:center;
+background-repeat:no-repeat;
 }
 
 th,td{
 padding:8px;
 text-align:center;
-border:1px solid #222;
+border:1px solid #ddd;
+color:black;
+
+/* fondo semi transparente para leer bien */
+background:rgba(255,255,255,0.85);
 }
 
 .team{
-color:#00ff66;
+color:#00aa44;
 font-weight:bold;
 }
 
@@ -237,21 +228,15 @@ line-height:1.5;
 <table>
 
 <tr>
-
 <th>POS</th>
 <th>TEAM</th>
 """
 
-    idx = 0
-
     for g in allgames:
-        color = colors[idx % len(colors)]
-        idx += 1
-
         html += f"""
-<th style='background:{color};color:black'>GAME {g}<br>PLAYERS</th>
-<th style='background:{color};color:black'>POS</th>
-<th style='background:{color};color:black'>SCORE</th>
+<th>GAME {g}</th>
+<th>POS</th>
+<th>SCORE</th>
 """
 
     html += """
@@ -263,18 +248,10 @@ line-height:1.5;
     pos = 1
 
     for r in ranking:
-        medal = ""
-
-        if pos == 1:
-            medal = "🥇"
-        elif pos == 2:
-            medal = "🥈"
-        elif pos == 3:
-            medal = "🥉"
 
         html += f"""
 <tr>
-<td>{medal} {pos}</td>
+<td>{pos}</td>
 <td class='team'>{r['team']}</td>
 """
 
@@ -300,29 +277,6 @@ line-height:1.5;
 </tr>
 """
         pos += 1
-
-    html += """
-</table>
-
-<h2 style='color:#00ff66'>🔥 FRAGGER TABLE</h2>
-
-<table>
-
-<tr>
-<th>PLAYER</th>
-<th>TEAM</th>
-<th>KILLS</th>
-</tr>
-"""
-
-    for p, s in fraggers:
-        html += f"""
-<tr>
-<td>{p}</td>
-<td>{s['team']}</td>
-<td>{s['kills']}</td>
-</tr>
-"""
 
     html += """
 </table>
