@@ -57,7 +57,41 @@ def save(data):
         )
 
 #################################################
-# REPORT API
+
+def calcular_score(
+
+    placement,
+
+    teamkills
+
+):
+
+    if placement==1:
+
+        mult=1.6
+
+    elif placement<=5:
+
+        mult=1.4
+
+    elif placement<=10:
+
+        mult=1.2
+
+    else:
+
+        mult=1
+
+    return round(
+
+        teamkills*mult,
+
+        2
+
+    )
+
+#################################################
+# REPORT
 #################################################
 
 @app.route(
@@ -116,33 +150,17 @@ def report():
 
 #################################################
 
-    teamkills=sum(kills)
+    teamkills=sum(
 
-#################################################
+        kills
 
-    if placement==1:
+    )
 
-        mult=1.6
+    score=calcular_score(
 
-    elif placement<=5:
+        placement,
 
-        mult=1.4
-
-    elif placement<=10:
-
-        mult=1.2
-
-    else:
-
-        mult=1
-
-#################################################
-
-    score=round(
-
-        teamkills*mult,
-
-        2
+        teamkills
 
     )
 
@@ -172,7 +190,11 @@ def report():
 
 #################################################
 
-    for i,p in enumerate(players):
+    for i,p in enumerate(
+
+        players
+
+    ):
 
         if p not in db["equipos"][team]["players"]:
 
@@ -187,6 +209,154 @@ def report():
 #################################################
 
     save(db)
+
+    return jsonify({
+
+        "ok":True
+
+    })
+
+#################################################
+# MODIFICAR
+#################################################
+
+@app.route(
+
+"/modificar",
+
+methods=["POST"]
+
+)
+
+def modificar():
+
+    body=request.json
+
+    team=body["equipo"]
+
+    game=str(
+
+        body["game"]
+
+    )
+
+#################################################
+
+    db=load()
+
+#################################################
+
+    if team not in db["equipos"]:
+
+        return jsonify({
+
+            "error":"equipo no existe"
+
+        }),400
+
+#################################################
+
+    if game not in db["equipos"][team]["games"]:
+
+        return jsonify({
+
+            "error":"partida no existe"
+
+        }),400
+
+#################################################
+# QUITAR KILLS ANTERIORES
+#################################################
+
+    old=db["equipos"][team]["games"][game]
+
+    for p,k in old["players"].items():
+
+        if p in db["equipos"][team]["players"]:
+
+            db["equipos"][team]["players"][p]["kills"]-=k
+
+#################################################
+
+    placement=int(
+
+        body["placement"]
+
+    )
+
+    players=body["jugadores"]
+
+    kills=body["kills"]
+
+#################################################
+
+    teamkills=sum(
+
+        kills
+
+    )
+
+#################################################
+
+    score=calcular_score(
+
+        placement,
+
+        teamkills
+
+    )
+
+#################################################
+
+    db["equipos"][team]["games"][game]={
+
+        "placement":placement,
+
+        "kills":teamkills,
+
+        "score":score,
+
+        "players":{
+
+            players[i]:kills[i]
+
+            for i in range(
+
+                len(players)
+
+            )
+
+        }
+
+    }
+
+#################################################
+
+    for i,p in enumerate(
+
+        players
+
+    ):
+
+        if p not in db["equipos"][team]["players"]:
+
+            db["equipos"][team]["players"][p]={
+
+                "kills":0
+
+            }
+
+        db["equipos"][team]["players"][p]["kills"]+=kills[i]
+
+#################################################
+
+    save(
+
+        db
+
+    )
+
+#################################################
 
     return jsonify({
 
@@ -228,23 +398,29 @@ def home():
 
     for team,data in equipos.items():
 
-        total_score=0
+        score=0
 
-        total_kills=0
+        kills=0
 
         for g,info in data["games"].items():
 
-            total_score+=info["score"]
+            score+=info["score"]
 
-            total_kills+=info["kills"]
+            kills+=info["kills"]
 
         ranking.append({
 
             "team":team,
 
-            "score":round(total_score,2),
+            "score":round(
 
-            "kills":total_kills,
+                score,
+
+                2
+
+            ),
+
+            "kills":kills,
 
             "games":data["games"]
 
@@ -300,11 +476,11 @@ def home():
 
 "#00ff66",
 
-"#c8ff00",
+"#d6ff00",
 
-"#00ffcc",
+"#00ffaa",
 
-"#d0ff00",
+"#aaff00",
 
 "#66ff00",
 
@@ -325,85 +501,37 @@ def home():
 <style>
 
 body{
-
 background:#090909;
-
 color:white;
-
 font-family:Arial;
-
 margin:20px;
-
 }
 
 h1{
-
-color:#d4ff00;
-
-text-shadow:0 0 20px #d4ff00;
-
+color:#d6ff00;
+text-shadow:0 0 20px #d6ff00;
 }
 
 table{
-
 width:100%;
-
 border-collapse:collapse;
-
 margin-bottom:30px;
-
 }
 
-th{
-
-padding:10px;
-
-border:1px solid #00ff66;
-
-}
-
-td{
-
+th,td{
 padding:8px;
-
-border:1px solid #1f1f1f;
-
 text-align:center;
-
+border:1px solid #222;
 }
 
 .team{
-
-font-weight:bold;
-
 color:#00ff66;
-
+font-weight:bold;
 }
 
 .players{
-
 font-size:12px;
-
-line-height:1.6;
-
-}
-
-.top1{
-
-background:#404000;
-
-}
-
-.top2{
-
-background:#1d331d;
-
-}
-
-.top3{
-
-background:#223300;
-
+line-height:1.5;
 }
 
 </style>
@@ -412,11 +540,7 @@ background:#223300;
 
 <body>
 
-<h1>
-
-🏆 Liga CBS
-
-</h1>
+<h1>🏆 Liga CBS</h1>
 
 <table>
 
@@ -427,8 +551,6 @@ background:#223300;
 <th>TEAM</th>
 
 """
-
-#################################################
 
     idx=0
 
@@ -448,11 +570,7 @@ background:#223300;
 
 <th style='background:{color};color:black'>
 
-GAME {g}
-
-<br>
-
-PLAYERS
+GAME {g}<br>PLAYERS
 
 </th>
 
@@ -470,8 +588,6 @@ SCORE
 
 """
 
-#################################################
-
     html+="""
 
 <th>TOTAL SCORE</th>
@@ -488,33 +604,25 @@ SCORE
 
     for r in ranking:
 
-        cls=""
-
         medal=""
 
         if pos==1:
 
             medal="🥇"
 
-            cls="top1"
-
         elif pos==2:
 
             medal="🥈"
-
-            cls="top2"
 
         elif pos==3:
 
             medal="🥉"
 
-            cls="top3"
-
 #################################################
 
         html+=f"""
 
-<tr class='{cls}'>
+<tr>
 
 <td>
 
@@ -542,11 +650,7 @@ SCORE
 
                 for p,k in game["players"].items():
 
-                    players+=f"""
-
-{p}: {k}<br>
-
-"""
+                    players+=f"{p}:{k}<br>"
 
                 html+=f"""
 
@@ -572,15 +676,7 @@ SCORE
 
             else:
 
-                html+="""
-
-<td>-</td>
-
-<td>-</td>
-
-<td>-</td>
-
-"""
+                html+="<td>-</td><td>-</td><td>-</td>"
 
 #################################################
 
