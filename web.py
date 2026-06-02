@@ -240,8 +240,6 @@ def modificar():
 
     )
 
-#################################################
-
     db=load()
 
 #################################################
@@ -264,8 +262,6 @@ def modificar():
 
         }),400
 
-#################################################
-# QUITAR KILLS ANTERIORES
 #################################################
 
     old=db["equipos"][team]["games"][game]
@@ -412,13 +408,7 @@ def home():
 
             "team":team,
 
-            "score":round(
-
-                score,
-
-                2
-
-            ),
+            "score":round(score,2),
 
             "kills":kills,
 
@@ -446,6 +436,12 @@ def home():
 
         for p,s in data["players"].items():
 
+            total=s["kills"]
+
+            if total<=0:
+
+                continue
+
             if p not in fragger:
 
                 fragger[p]={
@@ -456,7 +452,7 @@ def home():
 
                 }
 
-            fragger[p]["kills"]+=s["kills"]
+            fragger[p]["kills"]+=total
 
 #################################################
 
@@ -475,15 +471,10 @@ def home():
     colors=[
 
 "#00ff66",
-
 "#d6ff00",
-
 "#00ffaa",
-
 "#aaff00",
-
 "#66ff00",
-
 "#ffe600"
 
 ]
@@ -556,13 +547,7 @@ line-height:1.5;
 
     for g in allgames:
 
-        color=colors[
-
-            idx%
-
-            len(colors)
-
-        ]
+        color=colors[idx%len(colors)]
 
         idx+=1
 
@@ -618,27 +603,15 @@ SCORE
 
             medal="🥉"
 
-#################################################
-
         html+=f"""
 
 <tr>
 
-<td>
+<td>{medal} {pos}</td>
 
-{medal} {pos}
-
-</td>
-
-<td class='team'>
-
-{r['team']}
-
-</td>
+<td class='team'>{r['team']}</td>
 
 """
-
-#################################################
 
         for g in allgames:
 
@@ -660,17 +633,9 @@ SCORE
 
 </td>
 
-<td>
+<td>{game['placement']}</td>
 
-{game['placement']}
-
-</td>
-
-<td>
-
-{game['score']}
-
-</td>
+<td>{game['score']}</td>
 
 """
 
@@ -678,21 +643,11 @@ SCORE
 
                 html+="<td>-</td><td>-</td><td>-</td>"
 
-#################################################
-
         html+=f"""
 
-<td>
+<td>{r['score']}</td>
 
-{r['score']}
-
-</td>
-
-<td>
-
-{r['kills']}
-
-</td>
+<td>{r['kills']}</td>
 
 </tr>
 
@@ -726,8 +681,6 @@ SCORE
 
 """
 
-#################################################
-
     for p,s in fraggers:
 
         html+=f"""
@@ -743,8 +696,6 @@ SCORE
 </tr>
 
 """
-
-#################################################
 
     html+="""
 
