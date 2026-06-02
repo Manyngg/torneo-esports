@@ -181,7 +181,8 @@ margin:20px;
 }
 
 h1{
-color:#111;
+color:black;
+font-weight:bold;
 }
 
 /* 🟢🟡 TABLAS GAMER */
@@ -209,10 +210,10 @@ text-align:center;
 color:black;
 }
 
+/* ❌ CAMBIO IMPORTANTE: equipos en negro */
 .team{
-color:#00ff66;
+color:black;
 font-weight:bold;
-text-shadow:0 0 5px #00ff66;
 }
 
 .players{
@@ -220,9 +221,11 @@ font-size:12px;
 line-height:1.5;
 }
 
+/* ❌ FRAGGER TITLE EN NEGRO */
 h2{
-color:#00ff66;
-text-shadow:0 0 8px #00ff66;
+color:black;
+font-weight:bold;
+text-shadow:none;
 }
 
 tr:hover{
