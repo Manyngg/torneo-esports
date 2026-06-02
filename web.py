@@ -195,7 +195,6 @@ box-shadow:0 0 10px #00ff66;
 }
 
 th{
-background:#d6ff00;
 color:black;
 border:1px solid #00ff66;
 padding:10px;
@@ -246,11 +245,28 @@ transition:0.2s;
 <th>TEAM</th>
 """
 
+    # 🎮 COLORES POR GAME
+    game_colors = [
+        "#00ff66",
+        "#d6ff00",
+        "#00ffaa",
+        "#aaff00",
+        "#66ff00",
+        "#ffe600",
+        "#00ffd5",
+        "#b6ff00"
+    ]
+
+    idx = 0
+
     for g in allgames:
+        color = game_colors[idx % len(game_colors)]
+        idx += 1
+
         html += f"""
-<th>GAME {g}</th>
-<th>POS</th>
-<th>SCORE</th>
+<th style="background:{color};">GAME {g}</th>
+<th style="background:{color};">POS</th>
+<th style="background:{color};">SCORE</th>
 """
 
     html += """
@@ -311,7 +327,6 @@ transition:0.2s;
     for p, s in fraggers:
 
         medal = ""
-
         if pos == 1:
             medal = "🥇"
         elif pos == 2:
