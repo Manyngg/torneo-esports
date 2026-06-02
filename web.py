@@ -6,7 +6,7 @@ app = Flask(__name__)
 
 DB="data.json"
 
-##################################################
+#################################################
 
 def load():
 
@@ -30,7 +30,7 @@ def load():
 
         return json.load(f)
 
-##################################################
+#################################################
 
 def save(data):
 
@@ -56,9 +56,9 @@ def save(data):
 
         )
 
-##################################################
+#################################################
 # REPORT API
-##################################################
+#################################################
 
 @app.route(
 
@@ -74,7 +74,11 @@ def report():
 
     team=body["equipo"]
 
-    game=str(body["game"])
+    game=str(
+
+        body["game"]
+
+    )
 
     placement=int(
 
@@ -88,7 +92,7 @@ def report():
 
     db=load()
 
-##################################################
+#################################################
 
     if team not in db["equipos"]:
 
@@ -100,7 +104,7 @@ def report():
 
         }
 
-##################################################
+#################################################
 
     if game in db["equipos"][team]["games"]:
 
@@ -110,21 +114,21 @@ def report():
 
         }),400
 
-##################################################
+#################################################
 
     teamkills=sum(kills)
 
-##################################################
+#################################################
 
-    if placement == 1:
+    if placement==1:
 
         mult=1.6
 
-    elif placement <=5:
+    elif placement<=5:
 
         mult=1.4
 
-    elif placement <=10:
+    elif placement<=10:
 
         mult=1.2
 
@@ -132,7 +136,7 @@ def report():
 
         mult=1
 
-##################################################
+#################################################
 
     score=round(
 
@@ -142,7 +146,7 @@ def report():
 
     )
 
-##################################################
+#################################################
 
     db["equipos"][team]["games"][game]={
 
@@ -166,7 +170,7 @@ def report():
 
     }
 
-##################################################
+#################################################
 
     for i,p in enumerate(players):
 
@@ -178,17 +182,21 @@ def report():
 
             }
 
-        db["equipos"][team]["players"][p]["kills"] += kills[i]
+        db["equipos"][team]["players"][p]["kills"]+=kills[i]
 
-##################################################
+#################################################
 
     save(db)
 
-    return jsonify({"ok":True})
+    return jsonify({
 
-##################################################
+        "ok":True
+
+    })
+
+#################################################
 # WEB
-##################################################
+#################################################
 
 @app.route("/")
 
@@ -198,13 +206,13 @@ def home():
 
     equipos=db["equipos"]
 
-##################################################
+#################################################
 
     allgames=set()
 
-    for team,data in equipos.items():
+    for t,d in equipos.items():
 
-        for g in data["games"]:
+        for g in d["games"]:
 
             allgames.add(g)
 
@@ -214,39 +222,7 @@ def home():
 
     )
 
-##################################################
-
-    fragger={}
-
-    for team,data in equipos.items():
-
-        for player,stats in data["players"].items():
-
-            if player not in fragger:
-
-                fragger[player]={
-
-                    "team":team,
-
-                    "kills":0
-
-                }
-
-            fragger[player]["kills"] += stats["kills"]
-
-##################################################
-
-    fraggers=sorted(
-
-        fragger.items(),
-
-        key=lambda x:x[1]["kills"],
-
-        reverse=True
-
-    )
-
-##################################################
+#################################################
 
     ranking=[]
 
@@ -274,7 +250,7 @@ def home():
 
         })
 
-##################################################
+#################################################
 
     ranking=sorted(
 
@@ -286,7 +262,57 @@ def home():
 
     )
 
-##################################################
+#################################################
+
+    fragger={}
+
+    for team,data in equipos.items():
+
+        for p,s in data["players"].items():
+
+            if p not in fragger:
+
+                fragger[p]={
+
+                    "team":team,
+
+                    "kills":0
+
+                }
+
+            fragger[p]["kills"]+=s["kills"]
+
+#################################################
+
+    fraggers=sorted(
+
+        fragger.items(),
+
+        key=lambda x:x[1]["kills"],
+
+        reverse=True
+
+    )
+
+#################################################
+
+    colors=[
+
+"#00ff66",
+
+"#c8ff00",
+
+"#00ffcc",
+
+"#d0ff00",
+
+"#66ff00",
+
+"#ffe600"
+
+]
+
+#################################################
 
     html="""
 
@@ -299,61 +325,85 @@ def home():
 <style>
 
 body{
-background:#0f0f0f;
+
+background:#090909;
+
 color:white;
+
 font-family:Arial;
+
 margin:20px;
+
 }
 
 h1{
-color:#ffe600;
-}
 
-.stats{
-display:flex;
-gap:20px;
-margin-bottom:20px;
-}
+color:#d4ff00;
 
-.box{
-background:#1d1d1d;
-padding:12px;
-border-radius:10px;
-box-shadow:0 0 15px rgba(0,255,255,.2);
+text-shadow:0 0 20px #d4ff00;
+
 }
 
 table{
+
 width:100%;
+
 border-collapse:collapse;
+
 margin-bottom:30px;
+
 }
 
 th{
-background:#3247ff;
+
 padding:10px;
+
+border:1px solid #00ff66;
+
 }
 
 td{
+
 padding:8px;
-border:1px solid #333;
+
+border:1px solid #1f1f1f;
+
 text-align:center;
+
+}
+
+.team{
+
+font-weight:bold;
+
+color:#00ff66;
+
+}
+
+.players{
+
+font-size:12px;
+
+line-height:1.6;
+
 }
 
 .top1{
-background:#594400;
+
+background:#404000;
+
 }
 
 .top2{
-background:#3b3b3b;
+
+background:#1d331d;
+
 }
 
 .top3{
-background:#5d3f21;
-}
 
-.playerbox{
-font-size:12px;
-line-height:1.5;
+background:#223300;
+
 }
 
 </style>
@@ -362,25 +412,11 @@ line-height:1.5;
 
 <body>
 
-<h1>🏆 Liga CBS</h1>
+<h1>
 
-<div class='stats'>
+🏆 Liga CBS
 
-<div class='box'>
-Equipos:
-<br>
-""" + str(len(equipos)) + """
-
-</div>
-
-<div class='box'>
-Partidas:
-<br>
-""" + str(len(allgames)) + """
-
-</div>
-
-</div>
+</h1>
 
 <table>
 
@@ -390,27 +426,53 @@ Partidas:
 
 <th>TEAM</th>
 
-<th>PLAYERS</th>
-
 """
 
-##################################################
+#################################################
+
+    idx=0
 
     for g in allgames:
 
-        html += f"""
+        color=colors[
 
-<th>G{g} POS</th>
+            idx%
 
-<th>G{g} KILLS</th>
+            len(colors)
 
-<th>G{g} SCORE</th>
+        ]
+
+        idx+=1
+
+        html+=f"""
+
+<th style='background:{color};color:black'>
+
+GAME {g}
+
+<br>
+
+PLAYERS
+
+</th>
+
+<th style='background:{color};color:black'>
+
+POS
+
+</th>
+
+<th style='background:{color};color:black'>
+
+SCORE
+
+</th>
 
 """
 
-##################################################
+#################################################
 
-    html += """
+    html+="""
 
 <th>TOTAL SCORE</th>
 
@@ -420,79 +482,55 @@ Partidas:
 
 """
 
-##################################################
+#################################################
 
-    posicion=1
+    pos=1
 
     for r in ranking:
 
-        clase=""
+        cls=""
 
         medal=""
 
-        if posicion==1:
+        if pos==1:
 
             medal="🥇"
 
-            clase="top1"
+            cls="top1"
 
-        elif posicion==2:
+        elif pos==2:
 
             medal="🥈"
 
-            clase="top2"
+            cls="top2"
 
-        elif posicion==3:
+        elif pos==3:
 
             medal="🥉"
 
-            clase="top3"
+            cls="top3"
 
-##################################################
+#################################################
 
-        playershtml=""
+        html+=f"""
 
-        teamplayers=equipos[
-
-            r["team"]
-
-        ]["players"]
-
-        for p,s in teamplayers.items():
-
-            playershtml += f"""
-
-{p}: {s['kills']}<br>
-
-"""
-
-##################################################
-
-        html += f"""
-
-<tr class='{clase}'>
+<tr class='{cls}'>
 
 <td>
 
-{medal} {posicion}
+{medal} {pos}
 
 </td>
 
-<td>
+<td class='team'>
 
 {r['team']}
 
 </td>
 
-<td class='playerbox'>
-
-{playershtml}
-
-</td>
-
 """
 
-##################################################
+#################################################
 
         for g in allgames:
 
@@ -500,19 +538,41 @@ Partidas:
 
                 game=r["games"][g]
 
-                html += f"""
+                players=""
 
-<td>{game['placement']}</td>
+                for p,k in game["players"].items():
 
-<td>{game['kills']}</td>
+                    players+=f"""
 
-<td>{game['score']}</td>
+{p}: {k}<br>
+
+"""
+
+                html+=f"""
+
+<td class='players'>
+
+{players}
+
+</td>
+
+<td>
+
+{game['placement']}
+
+</td>
+
+<td>
+
+{game['score']}
+
+</td>
 
 """
 
             else:
 
-                html += """
+                html+="""
 
 <td>-</td>
 
@@ -522,9 +582,9 @@ Partidas:
 
 """
 
-##################################################
+#################################################
 
-        html += f"""
+        html+=f"""
 
 <td>
 
@@ -542,15 +602,19 @@ Partidas:
 
 """
 
-        posicion+=1
+        pos+=1
 
-##################################################
+#################################################
 
-    html += """
+    html+="""
 
 </table>
 
-<h2>🔥 FRAGGER TABLE</h2>
+<h2 style='color:#00ff66'>
+
+🔥 FRAGGER TABLE
+
+</h2>
 
 <table>
 
@@ -566,27 +630,27 @@ Partidas:
 
 """
 
-##################################################
+#################################################
 
-    for player,stats in fraggers:
+    for p,s in fraggers:
 
-        html += f"""
+        html+=f"""
 
 <tr>
 
-<td>{player}</td>
+<td>{p}</td>
 
-<td>{stats['team']}</td>
+<td>{s['team']}</td>
 
-<td>{stats['kills']}</td>
+<td>{s['kills']}</td>
 
 </tr>
 
 """
 
-##################################################
+#################################################
 
-    html += """
+    html+="""
 
 </table>
 
@@ -598,7 +662,7 @@ Partidas:
 
     return html
 
-##################################################
+#################################################
 
 if __name__=="__main__":
 
