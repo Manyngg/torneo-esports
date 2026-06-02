@@ -262,7 +262,6 @@ transition:0.2s;
     pos = 1
 
     for r in ranking:
-
         html += f"""
 <tr>
 <td>{pos}</td>
@@ -300,20 +299,36 @@ transition:0.2s;
 <table>
 
 <tr>
+<th>POS</th>
 <th>PLAYER</th>
 <th>TEAM</th>
 <th>KILLS</th>
 </tr>
 """
 
+    pos = 1
+
     for p, s in fraggers:
+
+        medal = ""
+
+        if pos == 1:
+            medal = "🥇"
+        elif pos == 2:
+            medal = "🥈"
+        elif pos == 3:
+            medal = "🥉"
+
         html += f"""
 <tr>
+<td>{medal} {pos}</td>
 <td>{p}</td>
 <td>{s['team']}</td>
 <td>{s['kills']}</td>
 </tr>
 """
+
+        pos += 1
 
     html += """
 </table>
