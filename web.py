@@ -210,18 +210,18 @@ text-align:center;
 color:black;
 }
 
-/* ❌ CAMBIO IMPORTANTE: equipos en negro */
+/* 👤 equipos en negro */
 .team{
 color:black;
 font-weight:bold;
 }
 
+/* 👥 players */
 .players{
 font-size:12px;
 line-height:1.5;
 }
 
-/* ❌ FRAGGER TITLE EN NEGRO */
 h2{
 color:black;
 font-weight:bold;
@@ -248,7 +248,7 @@ transition:0.2s;
 <th>TEAM</th>
 """
 
-    # 🎮 COLORES POR GAME
+    # 🎮 colores games
     game_colors = [
         "#00ff66",
         "#d6ff00",
@@ -278,12 +278,22 @@ transition:0.2s;
 </tr>
 """
 
+    # 🏆 RANKING GENERAL CON MEDALLAS
     pos = 1
 
     for r in ranking:
+
+        medal = ""
+        if pos == 1:
+            medal = "🥇"
+        elif pos == 2:
+            medal = "🥈"
+        elif pos == 3:
+            medal = "🥉"
+
         html += f"""
 <tr>
-<td>{pos}</td>
+<td>{medal} {pos}</td>
 <td class='team'>{r['team']}</td>
 """
 
@@ -325,6 +335,7 @@ transition:0.2s;
 </tr>
 """
 
+    # 🔥 FRAGGER CON MEDALLAS
     pos = 1
 
     for p, s in fraggers:
