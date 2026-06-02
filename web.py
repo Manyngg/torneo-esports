@@ -254,7 +254,7 @@ background:rgba(0,255,102,0.08);
 
 <body>
 
-<h1>🏆 Liga CBS</h1>
+<h1>🏆 Liga CBS COLOMBIA</h1>
 
 <table>
 <tr>
