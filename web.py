@@ -35,8 +35,6 @@ def calcular_score(placement, teamkills):
     return round(teamkills * mult, 2)
 
 #################################################
-# REPORT
-#################################################
 
 @app.route("/report", methods=["POST"])
 def report():
@@ -74,8 +72,6 @@ def report():
     save(db)
     return jsonify({"ok": True})
 
-#################################################
-# MODIFICAR
 #################################################
 
 @app.route("/modificar", methods=["POST"])
@@ -121,8 +117,6 @@ def modificar():
     save(db)
     return jsonify({"ok": True})
 
-#################################################
-# WEB
 #################################################
 
 @app.route("/")
@@ -173,64 +167,85 @@ def home():
 
 <style>
 
+/* 🌌 FONDO */
 body{
-background:white;
-color:black;
+background:linear-gradient(135deg,#0a0a0a,#111,#0a0a0a);
+color:white;
 font-family:Arial;
 margin:20px;
 }
 
+/* 🏆 TITULO */
 h1{
-color:black;
-font-weight:bold;
+color:#00ff66;
+text-shadow:0 0 15px #00ff66;
 }
 
-/* 🟢🟡 TABLAS GAMER */
+/* 🎴 TABLAS 3D MODERNAS */
 table{
 width:100%;
 border-collapse:collapse;
 margin-bottom:30px;
-background:white;
-border:2px solid #00ff66;
-box-shadow:0 0 10px #00ff66;
+
+/* efecto tarjeta 3D */
+background:rgba(255,255,255,0.08);
+backdrop-filter: blur(8px);
+border-radius:15px;
+overflow:hidden;
+box-shadow:
+0 10px 25px rgba(0,0,0,0.5),
+0 0 20px rgba(0,255,102,0.3);
+transform: perspective(900px);
+transition:0.3s;
 }
 
+table:hover{
+transform: translateY(-5px) perspective(900px) rotateX(2deg);
+box-shadow:
+0 15px 35px rgba(0,0,0,0.6),
+0 0 30px rgba(0,255,102,0.5);
+}
+
+/* encabezados */
 th{
-color:black;
-border:1px solid #00ff66;
-padding:10px;
+background:rgba(0,255,102,0.2);
+color:#00ff66;
+padding:12px;
 text-transform:uppercase;
-font-weight:bold;
+border-bottom:1px solid rgba(0,255,102,0.5);
 }
 
+/* celdas */
 td{
-border:1px solid #00ff66;
-padding:8px;
+padding:10px;
 text-align:center;
-color:black;
+color:white;
+border-bottom:1px solid rgba(255,255,255,0.1);
 }
 
-/* 👤 equipos en negro */
+/* equipos */
 .team{
-color:black;
+color:#00ff66;
 font-weight:bold;
+text-shadow:0 0 5px #00ff66;
 }
 
-/* 👥 players */
+/* players */
 .players{
 font-size:12px;
 line-height:1.5;
+opacity:0.9;
 }
 
+/* fragger titulo */
 h2{
-color:black;
-font-weight:bold;
-text-shadow:none;
+color:#00ff66;
+text-shadow:0 0 10px #00ff66;
 }
 
+/* hover filas */
 tr:hover{
-background:#f9ffe0;
-transition:0.2s;
+background:rgba(0,255,102,0.08);
 }
 
 </style>
@@ -242,23 +257,12 @@ transition:0.2s;
 <h1>🏆 Liga CBS</h1>
 
 <table>
-
 <tr>
 <th>POS</th>
 <th>TEAM</th>
 """
 
-    # 🎮 colores games
-    game_colors = [
-        "#00ff66",
-        "#d6ff00",
-        "#00ffaa",
-        "#aaff00",
-        "#66ff00",
-        "#ffe600",
-        "#00ffd5",
-        "#b6ff00"
-    ]
+    game_colors = ["#00ff66","#d6ff00","#00ffaa","#aaff00","#66ff00","#ffe600"]
 
     idx = 0
 
@@ -267,9 +271,9 @@ transition:0.2s;
         idx += 1
 
         html += f"""
-<th style="background:{color};">GAME {g}</th>
-<th style="background:{color};">POS</th>
-<th style="background:{color};">SCORE</th>
+<th style="background:{color};color:black;">GAME {g}</th>
+<th style="background:{color};color:black;">POS</th>
+<th style="background:{color};color:black;">SCORE</th>
 """
 
     html += """
@@ -278,7 +282,6 @@ transition:0.2s;
 </tr>
 """
 
-    # 🏆 RANKING GENERAL CON MEDALLAS
     pos = 1
 
     for r in ranking:
@@ -335,7 +338,6 @@ transition:0.2s;
 </tr>
 """
 
-    # 🔥 FRAGGER CON MEDALLAS
     pos = 1
 
     for p, s in fraggers:
