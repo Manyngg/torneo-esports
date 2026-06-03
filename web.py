@@ -31,60 +31,92 @@ def calcular_score(placement, kills):
     return round(kills * mult, 2)
 
 
+# =========================
+# REPORT (ARREGLADO)
+# =========================
+
 @app.route("/report", methods=["POST"])
 def report():
 
-    body = request.json
+    try:
+        body = request.json
 
-    team = body["equipo"]
-    game = str(body["game"])
-    placement = int(body["placement"])
+        team = str(body["equipo"]).strip()
+        game = str(body["game"]).strip()
+        placement = int(body["placement"])
 
-    players = body["jugadores"]
-    kills = body["kills"]
+        players = body["jugadores"]
+        kills = body["kills"]
 
-    db = load()
+        # 🔥 FIX: asegurar int
+        kills = [int(k) for k in kills]
 
-    if team not in db["equipos"]:
-        db["equipos"][team] = {"games": {}}
+        if len(players) != len(kills):
+            return jsonify({"error": "players/kills mismatch"}), 400
 
-    db["equipos"][team]["games"][game] = {
-        "placement": placement,
-        "kills": sum(kills),
-        "score": calcular_score(placement, sum(kills)),
-        "players": {players[i]: kills[i] for i in range(len(players))}
-    }
+        db = load()
 
-    save(db)
+        if team not in db["equipos"]:
+            db["equipos"][team] = {"games": {}}
 
-    return jsonify({"ok": True})
+        db["equipos"][team]["games"][game] = {
+            "placement": placement,
+            "kills": sum(kills),
+            "score": calcular_score(placement, sum(kills)),
+            "players": {
+                players[i].strip(): kills[i]
+                for i in range(len(players))
+            }
+        }
 
+        save(db)
+
+        return jsonify({"ok": True})
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# =========================
+# MODIFY
+# =========================
 
 @app.route("/modificar", methods=["POST"])
 def modificar():
 
-    body = request.json
+    try:
+        body = request.json
 
-    team = body["equipo"]
-    game = str(body["game"])
-    placement = int(body["placement"])
+        team = str(body["equipo"]).strip()
+        game = str(body["game"]).strip()
+        placement = int(body["placement"])
 
-    players = body["jugadores"]
-    kills = body["kills"]
+        players = body["jugadores"]
+        kills = [int(k) for k in body["kills"]]
 
-    db = load()
+        db = load()
 
-    db["equipos"][team]["games"][game] = {
-        "placement": placement,
-        "kills": sum(kills),
-        "score": calcular_score(placement, sum(kills)),
-        "players": {players[i]: kills[i] for i in range(len(players))}
-    }
+        db["equipos"][team]["games"][game] = {
+            "placement": placement,
+            "kills": sum(kills),
+            "score": calcular_score(placement, sum(kills)),
+            "players": {
+                players[i].strip(): kills[i]
+                for i in range(len(players))
+            }
+        }
 
-    save(db)
+        save(db)
 
-    return jsonify({"ok": True})
+        return jsonify({"ok": True})
 
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# =========================
+# RESET
+# =========================
 
 @app.route("/borrar", methods=["POST"])
 def borrar():
