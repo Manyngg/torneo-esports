@@ -1,167 +1,3 @@
-from flask import Flask, request, jsonify
-import json
-import os
-
-app = Flask(__name__)
-
-DB = "data.json"
-
-
-# =========================
-# DB SAFE LOAD / SAVE
-# =========================
-
-def load():
-    if not os.path.exists(DB):
-        return {"equipos": {}}
-
-    with open(DB, "r", encoding="utf8") as f:
-        try:
-            return json.load(f)
-        except:
-            return {"equipos": {}}
-
-
-def save(data):
-    tmp = DB + ".tmp"
-
-    with open(tmp, "w", encoding="utf8") as f:
-        json.dump(data, f, indent=4, ensure_ascii=False)
-
-    os.replace(tmp, DB)
-
-
-# =========================
-# SCORE SYSTEM
-# =========================
-
-def calcular_score(placement, teamkills):
-
-    if placement == 1:
-        mult = 1.6
-    elif placement <= 5:
-        mult = 1.4
-    elif placement <= 10:
-        mult = 1.2
-    else:
-        mult = 1
-
-    return round(teamkills * mult, 2)
-
-
-# =========================
-# REPORT MATCH
-# =========================
-
-@app.route("/report", methods=["POST"])
-def report():
-
-    body = request.json
-
-    team = body["equipo"]
-    game = str(body["game"])
-    placement = int(body["placement"])
-    players = body["jugadores"]
-    kills = body["kills"]
-
-    db = load()
-
-    if team not in db["equipos"]:
-        db["equipos"][team] = {
-            "games": {},
-            "players": {}
-        }
-
-    if game in db["equipos"][team]["games"]:
-        return jsonify({"error": "game repetida"}), 400
-
-    teamkills = sum(kills)
-    score = calcular_score(placement, teamkills)
-
-    db["equipos"][team]["games"][game] = {
-        "placement": placement,
-        "kills": teamkills,
-        "score": score,
-        "players": {
-            players[i]: kills[i] for i in range(len(players))
-        }
-    }
-
-    for i, p in enumerate(players):
-
-        if p not in db["equipos"][team]["players"]:
-            db["equipos"][team]["players"][p] = 0
-
-        db["equipos"][team]["players"][p] += kills[i]
-
-    save(db)
-
-    return jsonify({"ok": True})
-
-
-# =========================
-# MODIFY MATCH
-# =========================
-
-@app.route("/modificar", methods=["POST"])
-def modificar():
-
-    body = request.json
-
-    team = body["equipo"]
-    game = str(body["game"])
-
-    db = load()
-
-    if team not in db["equipos"]:
-        return jsonify({"error": "equipo no existe"}), 400
-
-    if game not in db["equipos"][team]["games"]:
-        return jsonify({"error": "partida no existe"}), 400
-
-    old = db["equipos"][team]["games"][game]
-
-    # quitar kills antiguas
-    for p, k in old["players"].items():
-
-        if isinstance(k, dict):
-            k = k.get("kills", 0)
-
-        if p in db["equipos"][team]["players"]:
-            db["equipos"][team]["players"][p] -= k
-
-    placement = int(body["placement"])
-    players = body["jugadores"]
-    kills = body["kills"]
-
-    teamkills = sum(kills)
-    score = calcular_score(placement, teamkills)
-
-    db["equipos"][team]["games"][game] = {
-        "placement": placement,
-        "kills": teamkills,
-        "score": score,
-        "players": {
-            players[i]: kills[i] for i in range(len(players))
-        }
-    }
-
-    for i, p in enumerate(players):
-
-        if p not in db["equipos"][team]["players"]:
-            db["equipos"][team]["players"][p] = 0
-
-        db["equipos"][team]["players"][p] += kills[i]
-
-    save(db)
-
-    return jsonify({"ok": True})
-
-
-# =========================
-# DASHBOARD WEB
-# =========================
-
 @app.route("/")
 def home():
 
@@ -177,7 +13,7 @@ def home():
     allgames = sorted(list(allgames))
 
     # =========================
-    # RANKING TEAMS
+    # RANKING
     # =========================
 
     ranking = []
@@ -201,7 +37,7 @@ def home():
     ranking.sort(key=lambda x: x["score"], reverse=True)
 
     # =========================
-    # FRAGGER GLOBAL (SAFE)
+    # FRAGGER
     # =========================
 
     fragger = {}
@@ -209,10 +45,7 @@ def home():
     for team, data in equipos.items():
 
         for p, k in data["players"].items():
-
-            if p not in fragger:
-                fragger[p] = {"team": team, "kills": 0}
-
+            fragger[p] = fragger.get(p, {"team": team, "kills": 0})
             fragger[p]["kills"] += k
 
     fraggers = sorted(
@@ -222,53 +55,113 @@ def home():
     )
 
     # =========================
-    # HTML SAFE
+    # HTML STYLE PRO
     # =========================
 
     html = """
 <html>
 <head>
 <meta http-equiv='refresh' content='30'>
+
 <style>
+
 body{
-background:#090909;
+background: radial-gradient(circle at top, #0f0f0f, #050505);
 color:white;
 font-family:Arial;
 margin:20px;
 }
 
 h1{
-color:#d6ff00;
-text-shadow:0 0 20px #d6ff00;
+color:#b6ff00;
+text-shadow:0 0 25px #b6ff00, 0 0 50px #00ff66;
+font-size:40px;
+text-align:center;
 }
 
+/* LINKS */
+.links{
+text-align:center;
+margin:10px 0 25px 0;
+}
+
+.links a{
+color:#00ff66;
+text-decoration:none;
+margin:0 15px;
+font-weight:bold;
+font-size:18px;
+padding:8px 15px;
+border:1px solid #00ff66;
+border-radius:10px;
+box-shadow:0 0 15px #00ff66;
+transition:0.3s;
+}
+
+.links a:hover{
+background:#00ff66;
+color:black;
+box-shadow:0 0 25px #b6ff00;
+}
+
+/* TABLA 3D */
 table{
 width:100%;
 border-collapse:collapse;
 margin-bottom:30px;
+background: rgba(20,20,20,0.6);
+box-shadow:0 10px 40px rgba(0,255,100,0.2);
+border-radius:15px;
+overflow:hidden;
+transform: perspective(900px) rotateX(2deg);
 }
 
 th,td{
-padding:8px;
+padding:10px;
 text-align:center;
-border:1px solid #222;
+border:1px solid rgba(255,255,255,0.05);
 }
 
+th{
+text-shadow:0 0 10px black;
+}
+
+/* TEAM */
 .team{
 color:#00ff66;
 font-weight:bold;
+text-shadow:0 0 10px #00ff66;
 }
 
+/* PLAYERS */
 .players{
 font-size:12px;
 line-height:1.5;
 }
+
+/* FRAGGER TITLE */
+h2{
+text-align:center;
+text-shadow:0 0 20px #b6ff00;
+}
+
+/* hover filas */
+tr:hover{
+background:rgba(0,255,102,0.08);
+}
+
 </style>
+
 </head>
 
 <body>
 
-<h1>🏆 Liga CBS</h1>
+<h1>🏆 LIGA CBS</h1>
+
+<div class="links">
+<a href="https://www.tiktok.com/@manyngg" target="_blank">🎵 TikTok</a>
+<a href="https://www.twitch.tv/manyyn" target="_blank">🎮 Twitch</a>
+</div>
 
 <table>
 <tr>
@@ -277,10 +170,14 @@ line-height:1.5;
 """
 
     # =========================
-    # HEADER GAMES
+    # COLORS GAME (NEON VARIATION)
     # =========================
 
-    colors = ["#00ff66", "#d6ff00", "#00ffaa", "#aaff00", "#66ff00", "#ffe600"]
+    colors = [
+        "#00ff66", "#b6ff00", "#00ffaa",
+        "#aaff00", "#66ff33", "#d4ff00"
+    ]
+
     idx = 0
 
     for g in allgames:
@@ -289,7 +186,9 @@ line-height:1.5;
         idx += 1
 
         html += f"""
-<th style='background:{color};color:black'>GAME {g}<br>PLAYERS</th>
+<th style='background:{color};color:black;box-shadow:0 0 15px {color}'>
+GAME {g}<br>PLAYERS
+</th>
 <th style='background:{color};color:black'>POS</th>
 <th style='background:{color};color:black'>SCORE</th>
 """
@@ -308,13 +207,7 @@ line-height:1.5;
 
     for r in ranking:
 
-        medal = ""
-        if pos == 1:
-            medal = "🥇"
-        elif pos == 2:
-            medal = "🥈"
-        elif pos == 3:
-            medal = "🥉"
+        medal = "🥇" if pos == 1 else "🥈" if pos == 2 else "🥉" if pos == 3 else ""
 
         html += f"""
 <tr>
@@ -331,10 +224,6 @@ line-height:1.5;
                 players_txt = ""
 
                 for p, k in game["players"].items():
-
-                    if isinstance(k, dict):
-                        k = k.get("kills", 0)
-
                     players_txt += f"{p}:{k}<br>"
 
                 html += f"""
@@ -356,7 +245,7 @@ line-height:1.5;
     html += """
 </table>
 
-<h2 style='color:#00ff66'>🔥 FRAGGER TABLE</h2>
+<h2>🔥 FRAGGER TABLE</h2>
 
 <table>
 <tr>
@@ -384,67 +273,3 @@ line-height:1.5;
 """
 
     return html
-
-
-# =========================
-# API PARA DISCORD
-# =========================
-
-@app.route("/api/leaderboard")
-def api_leaderboard():
-
-    db = load()
-
-    result = []
-
-    for team, data in db["equipos"].items():
-
-        score = 0
-        kills = 0
-
-        for g, info in data["games"].items():
-            score += info["score"]
-            kills += info["kills"]
-
-        result.append({
-            "team": team,
-            "score": score,
-            "kills": kills
-        })
-
-    result.sort(key=lambda x: x["score"], reverse=True)
-
-    return jsonify(result)
-
-
-@app.route("/api/fragger")
-def api_fragger():
-
-    db = load()
-
-    fragger = {}
-
-    for team, data in db["equipos"].items():
-
-        for p, k in data["players"].items():
-
-            if p not in fragger:
-                fragger[p] = {"team": team, "kills": 0}
-
-            fragger[p]["kills"] += k
-
-    result = sorted(
-        fragger.items(),
-        key=lambda x: x[1]["kills"],
-        reverse=True
-    )
-
-    return jsonify(result)
-
-
-# =========================
-# RUN
-# =========================
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=10000, debug=True)
