@@ -82,7 +82,7 @@ def report():
 # MODIFY
 # =========================
 
-@app.route("/modificar")
+@app.route("/modificar", methods=["POST"])
 def modificar():
 
     body = request.json
@@ -151,6 +151,7 @@ def home():
 
             for p, k in info["players"].items():
                 p = clean(p)
+
                 fragger[p] = fragger.get(p, {"team": team, "kills": 0})
                 fragger[p]["kills"] += k
 
@@ -180,28 +181,46 @@ text-align:center;
 color:#00ff66;
 text-shadow:0 0 25px #00ff66;
 font-size:38px;
-margin-bottom:5px;
+margin-bottom:10px;
 }
 
-/* LINKS */
+/* LINKS CARDS */
 .links{
-text-align:center;
-margin-bottom:20px;
+display:flex;
+justify-content:center;
+gap:20px;
+margin-bottom:25px;
 }
 
-.links a{
-color:#fff;
-margin:0 15px;
+.link-box{
+display:flex;
+align-items:center;
+gap:10px;
+padding:10px 18px;
+border-radius:12px;
+background:#111;
+border:1px solid #00ff66;
+box-shadow:0 0 15px rgba(0,255,100,0.3);
+transition:0.3s;
+}
+
+.link-box:hover{
+transform:scale(1.05);
+box-shadow:0 0 25px #00ff66;
+}
+
+.link-box img{
+width:22px;
+height:22px;
+}
+
+.link-box a{
+color:white;
 text-decoration:none;
 font-weight:bold;
 }
 
-.links a:hover{
-color:#00ff66;
-text-shadow:0 0 10px #00ff66;
-}
-
-/* TABLA PRINCIPAL */
+/* TABLA */
 table{
 width:100%;
 border-collapse:collapse;
@@ -212,41 +231,23 @@ border-radius:12px;
 overflow:hidden;
 }
 
-/* HEADERS */
 th{
 background:#00ff66;
 color:#000;
 padding:12px;
 font-size:14px;
 text-transform:uppercase;
-letter-spacing:1px;
 }
 
-/* CELDAS */
 td{
 padding:10px;
 text-align:center;
 border-bottom:1px solid #222;
 }
 
-/* EQUIPOS EN BLANCO */
 .team{
 color:white;
 font-weight:bold;
-text-shadow:0 0 10px rgba(255,255,255,0.2);
-}
-
-/* PLAYERS */
-.players{
-font-size:12px;
-line-height:1.5;
-color:#ccc;
-}
-
-/* EFECTO 3D */
-table:hover{
-transform:scale(1.01);
-transition:0.3s;
 }
 
 /* FRAGGER */
@@ -265,13 +266,22 @@ text-shadow:0 0 20px #d6ff00;
 <h1>🏆 LIGA CBS</h1>
 
 <div class="links">
+
+<div class="link-box">
+<img src="https://cdn-icons-png.flaticon.com/512/3046/3046120.png">
 <a href="https://www.tiktok.com/@manyngg" target="_blank">TikTok</a>
+</div>
+
+<div class="link-box">
+<img src="https://cdn-icons-png.flaticon.com/512/5968/5968819.png">
 <a href="https://www.twitch.tv/manyyn" target="_blank">Twitch</a>
+</div>
+
 </div>
 """
 
     # =========================
-    # RANKING
+    # RANKING TABLE
     # =========================
 
     html += "<table><tr><th>POS</th><th>TEAM</th>"
@@ -300,7 +310,7 @@ text-shadow:0 0 20px #d6ff00;
                 for p, k in game["players"].items():
                     players_txt += f"{p} : {k}<br>"
 
-                html += f"<td class='players'>{players_txt}</td><td>{game['placement']}</td><td>{game['score']}</td>"
+                html += f"<td>{players_txt}</td><td>{game['placement']}</td><td>{game['score']}</td>"
             else:
                 html += "<td>-</td><td>-</td><td>-</td>"
 
