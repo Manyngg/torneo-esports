@@ -67,15 +67,15 @@ def home():
 
     ranking = sorted(ranking, key=lambda x: x["score"], reverse=True)
 
-    fraggers = {}
+    fragger = {}
 
     for team, data in equipos.items():
         for p, s in data["players"].items():
-            if p not in fraggers:
-                fraggers[p] = {"team": team, "kills": 0}
-            fraggers[p]["kills"] += s["kills"]
+            if p not in fragger:
+                fragger[p] = {"team": team, "kills": 0}
+            fragger[p]["kills"] += s["kills"]
 
-    fraggers = sorted(fraggers.items(), key=lambda x: x[1]["kills"], reverse=True)
+    fraggers = sorted(fragger.items(), key=lambda x: x[1]["kills"], reverse=True)
 
     html = """
 <html>
@@ -91,10 +91,49 @@ font-family:Arial;
 margin:20px;
 }
 
+/* TITULO */
 h1{
 color:#00ff66;
 text-align:center;
 text-shadow:0 0 15px #00ff66;
+}
+
+/* CAJA LINKS */
+.links{
+display:flex;
+justify-content:center;
+gap:20px;
+margin:15px 0 25px 0;
+}
+
+.link-box{
+background:rgba(255,255,255,0.05);
+padding:15px 25px;
+border-radius:12px;
+box-shadow:0 10px 25px rgba(0,0,0,0.5);
+text-align:center;
+transition:0.3s;
+}
+
+.link-box:hover{
+transform:scale(1.05);
+}
+
+.link-box a{
+color:white;
+text-decoration:none;
+font-weight:bold;
+}
+
+/* ICONOS */
+.twitch{
+color:#a970ff;
+font-weight:bold;
+}
+
+.tiktok{
+color:#ff0050;
+font-weight:bold;
 }
 
 /* TABLAS */
@@ -115,23 +154,23 @@ padding:10px;
 }
 
 td{
-padding:8px;
+padding:10px;
 text-align:center;
 border-bottom:1px solid rgba(255,255,255,0.1);
 }
 
-/* STREAM */
-.stream{
-display:flex;
-justify-content:center;
-margin-top:20px;
+.team{
+color:white;
+font-weight:bold;
 }
 
-.stream iframe{
-width:420px;
-height:240px;
-border-radius:12px;
-border:2px solid #00ff66;
+tr:hover{
+background:rgba(0,255,102,0.1);
+}
+
+h2{
+color:#00ff66;
+text-shadow:0 0 10px #00ff66;
 }
 
 </style>
@@ -141,44 +180,93 @@ border:2px solid #00ff66;
 <body>
 
 <h1>🏆 Liga CBS</h1>
+
+<!-- 🔗 LINKS -->
+<div class="links">
+
+<div class="link-box twitch">
+🎮 Twitch<br>
+<a href="https://www.twitch.tv/manyyn" target="_blank">Manyyn</a>
+</div>
+
+<div class="link-box tiktok">
+🎵 TikTok<br>
+<a href="https://www.tiktok.com/@manyngg?_r=1&_t=ZS-96tAVhwT6Fr" target="_blank">@manyngg</a>
+</div>
+
+</div>
 """
 
     # TABLA GENERAL
-    html += "<table><tr><th>TEAM</th><th>SCORE</th><th>KILLS</th></tr>"
+    html += """
+<table>
+<tr>
+<th>POS</th>
+<th>TEAM</th>
+<th>SCORE</th>
+<th>KILLS</th>
+</tr>
+"""
 
+    pos = 1
     for r in ranking:
+
+        medal = ""
+        if pos == 1:
+            medal = "🥇"
+        elif pos == 2:
+            medal = "🥈"
+        elif pos == 3:
+            medal = "🥉"
+
         html += f"""
 <tr>
-<td>{r['team']}</td>
+<td>{medal} {pos}</td>
+<td class='team'>{r['team']}</td>
 <td>{r['score']}</td>
 <td>{r['kills']}</td>
 </tr>
 """
+        pos += 1
 
     html += "</table>"
 
-    # FRAGGER
-    html += "<h2 style='color:#00ff66'>🔥 FRAGGER</h2><table><tr><th>PLAYER</th><th>TEAM</th><th>KILLS</th></tr>"
+    # FRAGGER TABLE
+    html += """
+<h2>🔥 FRAGGER TABLE</h2>
 
+<table>
+<tr>
+<th>POS</th>
+<th>PLAYER</th>
+<th>TEAM</th>
+<th>KILLS</th>
+</tr>
+"""
+
+    pos = 1
     for p, s in fraggers:
+
+        medal = ""
+        if pos == 1:
+            medal = "🥇"
+        elif pos == 2:
+            medal = "🥈"
+        elif pos == 3:
+            medal = "🥉"
+
         html += f"""
 <tr>
+<td>{medal} {pos}</td>
 <td>{p}</td>
 <td>{s['team']}</td>
 <td>{s['kills']}</td>
 </tr>
 """
+        pos += 1
 
-    html += "</table>"
-
-    # 🎥 STREAM CORRECTO
     html += """
-<div class="stream">
-<iframe
-src="https://player.twitch.tv/?channel=manyyn&parent=localhost"
-allowfullscreen>
-</iframe>
-</div>
+</table>
 
 </body>
 </html>
