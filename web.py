@@ -7,10 +7,6 @@ app = Flask(__name__)
 DB = "data.json"
 
 
-# =========================
-# DB
-# =========================
-
 def load():
     if not os.path.exists(DB):
         return {"equipos": {}}
@@ -35,12 +31,9 @@ def calcular_score(placement, kills):
     return round(kills * mult, 2)
 
 
-# =========================
-# REPORT
-# =========================
-
 @app.route("/report", methods=["POST"])
 def report():
+
     body = request.json
 
     team = str(body.get("equipo", "")).strip()
@@ -69,12 +62,9 @@ def report():
     return jsonify({"ok": True})
 
 
-# =========================
-# MODIFICAR
-# =========================
-
 @app.route("/modificar", methods=["POST"])
 def modificar():
+
     body = request.json
 
     team = str(body.get("equipo", "")).strip()
@@ -100,10 +90,6 @@ def modificar():
     return jsonify({"ok": True})
 
 
-# =========================
-# BORRAR
-# =========================
-
 @app.route("/borrar", methods=["POST"])
 def borrar():
     db = load()
@@ -111,10 +97,6 @@ def borrar():
     save(db)
     return jsonify({"ok": True})
 
-
-# =========================
-# WEB
-# =========================
 
 @app.route("/")
 def home():
@@ -137,6 +119,7 @@ def home():
             posiciones_por_game[g][pos] += 1
 
     for team, data in equipos.items():
+
         score = 0
         kills = 0
 
@@ -169,10 +152,6 @@ def home():
 
     game_colors = ["#00ff66", "#d6ff00", "#00ffaa", "#aaff00"]
 
-    # =========================
-    # HTML
-    # =========================
-
     html = """
 <html>
 <head>
@@ -182,30 +161,27 @@ def home():
 
 body{
 background:#f2eee6;
-color:#111;
 font-family:Arial;
 margin:20px;
+color:#111;
 }
 
-/* HEADER */
 h1{
 text-align:center;
 color:#00aa55;
-text-shadow:0 2px 10px rgba(0,0,0,0.15);
 font-size:44px;
+text-shadow:0 2px 10px rgba(0,0,0,0.15);
 }
 
-/* LIVE */
 .live{
 text-align:center;
-color:#d60000;
+color:red;
 font-weight:bold;
 animation:blink 1s infinite;
 }
 
 @keyframes blink{50%{opacity:0.3;}}
 
-/* STREAM LINKS */
 .stream-links{
 text-align:center;
 margin:10px 0;
@@ -226,10 +202,6 @@ box-shadow:0 6px 15px rgba(0,0,0,0.2);
 .tiktok{background:linear-gradient(45deg,#00ff66,#00ffaa);}
 .twitch{background:linear-gradient(45deg,#d6ff00,#aaff00);}
 
-/* =========================
-   CARDS CON COLORES GAMER
-========================= */
-
 .cards{
 display:flex;
 justify-content:center;
@@ -237,45 +209,20 @@ gap:15px;
 margin:20px 0;
 }
 
+/* SOLO 3 CARDS AHORA */
 .card{
 border-radius:14px;
 padding:12px 18px;
-min-width:140px;
+min-width:160px;
 text-align:center;
 font-weight:bold;
-box-shadow:0 6px 0 rgba(0,0,0,0.25), 0 12px 25px rgba(0,0,0,0.25);
-transition:0.2s;
+box-shadow:0 6px 15px rgba(0,0,0,0.25);
 }
 
-.card:hover{
-transform:translateY(-3px);
-}
+.card:nth-child(1){background:linear-gradient(145deg,#00ff66,#00ffaa);color:black;}
+.card:nth-child(2){background:linear-gradient(145deg,#d6ff00,#fff200);color:black;}
+.card:nth-child(3){background:linear-gradient(145deg,#d6ff00,#ffea00);color:black;}
 
-/* TOP TEAM */
-.card:nth-child(1){
-background:linear-gradient(145deg,#00ff66,#00ffaa);
-color:black;
-}
-
-/* SCORE */
-.card:nth-child(2){
-background:linear-gradient(145deg,#d6ff00,#fff200);
-color:black;
-}
-
-/* KILLS */
-.card:nth-child(3){
-background:linear-gradient(145deg,#00ff66,#aaff00);
-color:black;
-}
-
-/* GAMES */
-.card:nth-child(4){
-background:linear-gradient(145deg,#d6ff00,#ffea00);
-color:black;
-}
-
-/* TABLAS 3D */
 table{
 width:100%;
 border-collapse:collapse;
@@ -291,23 +238,19 @@ th{
 background:#00ff66;
 color:black;
 padding:12px;
-text-transform:uppercase;
 }
 
 td{
 padding:10px;
 text-align:center;
-border-bottom:1px solid #cfcfcf;
-color:#111;
+border-bottom:1px solid #ccc;
 }
 
-/* DUPLICADOS */
 .duplicate-pos{
-color:red !important;
+color:red;
 font-weight:bold;
 }
 
-/* FRAGGER */
 h2{
 text-align:center;
 color:#b59a00;
@@ -322,29 +265,21 @@ color:#b59a00;
 
 <div class='live'>🔴 LIVE TOURNAMENT</div>
 
-<!-- STREAM LINKS -->
 <div class="stream-links">
 <a href="https://www.tiktok.com/@manyngg" target="_blank" class="btn tiktok">🎵 TikTok</a>
 <a href="https://www.twitch.tv/manyyn" target="_blank" class="btn twitch">🎮 Twitch</a>
 </div>
 
-<!-- CARDS -->
 <div class="cards">
 
 <div class="card">TOP TEAM<br>""" + str(top_team) + """</div>
 
 <div class="card">SCORE<br>""" + str(top_score) + """</div>
 
-<div class="card">KILLS<br>""" + str(total_kills_global) + """</div>
-
 <div class="card">GAMES<br>""" + str(len(allgames)) + """</div>
 
 </div>
 """
-
-    # =========================
-    # TABLA GENERAL
-    # =========================
 
     html += "<table><tr><th>POS</th><th>TEAM</th>"
 
@@ -384,18 +319,11 @@ color:#b59a00;
 
     html += "</table>"
 
-    # =========================
-    # FRAGGER
-    # =========================
-
-    html += "<h2>🔥 FRAGGER TABLE</h2>"
-    html += "<table><tr><th>POS</th><th>PLAYER</th><th>TEAM</th><th>KILLS</th></tr>"
+    html += "<h2>🔥 FRAGGER TABLE</h2><table><tr><th>POS</th><th>PLAYER</th><th>TEAM</th><th>KILLS</th></tr>"
 
     ppos = 1
     for p, s in fraggers:
-
         medal = "🥇" if ppos == 1 else "🥈" if ppos == 2 else "🥉" if ppos == 3 else ""
-
         html += f"<tr><td>{medal} {ppos}</td><td>{p}</td><td>{s['team']}</td><td>{s['kills']}</td></tr>"
         ppos += 1
 
