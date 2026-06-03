@@ -1,188 +1,100 @@
-import discord
-import requests
-import re
+from flask import Flask, request, jsonify
+import json
+import os
 
-TOKEN = "TU_TOKEN"
-URL = "https://torneo-esports.onrender.com"
+app = Flask(__name__)
 
-intents = discord.Intents.default()
-intents.message_content = True
-
-client = discord.Client(intents=intents)
+DB = "data.json"
 
 
-# =========================
-# REQUEST
-# =========================
-
-def enviar(data, endpoint):
-
-    try:
-        url = URL.rstrip("/") + endpoint
-
-        r = requests.post(
-            url,
-            json=data,
-            timeout=10
-        )
-
-        print("WEB STATUS:", r.status_code)
-        print("WEB RESPONSE:", r.text)
-
-        return r.status_code, r.text
-
-    except Exception as e:
-        print("ERROR REQUEST:", e)
-        return None, str(e)
+def load():
+    if not os.path.exists(DB):
+        return {"equipos": {}}
+    with open(DB, "r", encoding="utf8") as f:
+        return json.load(f)
 
 
-# =========================
-# BOT
-# =========================
-
-@client.event
-async def on_message(message):
-
-    if message.author.bot:
-        return
-
-    content = message.content
-
-    print("RECIBI:", repr(content))
+def save(data):
+    with open(DB, "w", encoding="utf8") as f:
+        json.dump(data, f, indent=4, ensure_ascii=False)
 
 
-    # =========================
-    # BORRAR TORNEO
-    # =========================
-
-    if content.lower().startswith("!borrar"):
-
-        try:
-
-            status, response = enviar({}, "/borrar")
-
-            if status == 200:
-                await message.channel.send(
-                    "🧹 Torneo borrado correctamente\n"
-                    "📦 Toda la información fue eliminada"
-                )
-            else:
-                await message.channel.send(
-                    f"❌ Error al borrar (HTTP {status})\n{response}"
-                )
-
-        except Exception as e:
-            await message.channel.send(f"❌ Error borrar: {e}")
-
-        return
+def calcular_score(placement, kills):
+    if placement == 1:
+        mult = 1.6
+    elif placement <= 5:
+        mult = 1.4
+    elif placement <= 10:
+        mult = 1.2
+    else:
+        mult = 1
+    return round(kills * mult, 2)
 
 
-    # =========================
-    # REPORTE
-    # =========================
+@app.route("/report", methods=["POST"])
+def report():
 
-    if content.startswith("!reporte"):
+    body = request.json
 
-        try:
+    team = body["equipo"]
+    game = str(body["game"])
+    placement = int(body["placement"])
 
-            lineas = content.splitlines()
+    players = body["jugadores"]
+    kills = body["kills"]
 
-            partida = int(re.sub(r"\D", "", lineas[0]))
-            equipo = lineas[1].replace("Equipo:", "").strip()
-            posicion = int(re.sub(r"\D", "", lineas[2]))
+    db = load()
 
-            jugadores = []
-            kills = []
+    if team not in db["equipos"]:
+        db["equipos"][team] = {"games": {}}
 
-            for linea in lineas[3:]:
+    db["equipos"][team]["games"][game] = {
+        "placement": placement,
+        "kills": sum(kills),
+        "score": calcular_score(placement, sum(kills)),
+        "players": {players[i]: kills[i] for i in range(len(players))}
+    }
 
-                match = re.search(r"(.+?)\s*(\d+)$", linea)
+    save(db)
 
-                if not match:
-                    continue
-
-                jugadores.append(match.group(1).strip())
-                kills.append(int(match.group(2)))
-
-            data = {
-                "equipo": equipo,
-                "game": partida,
-                "placement": posicion,
-                "jugadores": jugadores,
-                "kills": kills
-            }
-
-            status, response = enviar(data, "/report")
-
-            if status == 200:
-                await message.channel.send(
-                    f"✅ Reporte Guardado\n"
-                    f"Equipo: {equipo}\n"
-                    f"Partida: {partida}"
-                )
-            else:
-                await message.channel.send(
-                    f"❌ Error API (HTTP {status})\n{response}"
-                )
-
-        except Exception as e:
-            await message.channel.send(f"❌ Error formato\n{e}")
-
-        return
+    return jsonify({"ok": True})
 
 
-    # =========================
-    # MODIFICAR
-    # =========================
+@app.route("/modificar", methods=["POST"])
+def modificar():
 
-    if content.startswith("!modificar"):
+    body = request.json
 
-        try:
+    team = body["equipo"]
+    game = str(body["game"])
+    placement = int(body["placement"])
 
-            lineas = content.splitlines()
+    players = body["jugadores"]
+    kills = body["kills"]
 
-            partida = int(re.sub(r"\D", "", lineas[0]))
-            equipo = lineas[1].replace("Equipo:", "").strip()
-            posicion = int(re.sub(r"\D", "", lineas[2]))
+    db = load()
 
-            jugadores = []
-            kills = []
+    db["equipos"][team]["games"][game] = {
+        "placement": placement,
+        "kills": sum(kills),
+        "score": calcular_score(placement, sum(kills)),
+        "players": {players[i]: kills[i] for i in range(len(players))}
+    }
 
-            for linea in lineas[3:]:
+    save(db)
 
-                match = re.search(r"(.+?)\s*(\d+)$", linea)
-
-                if not match:
-                    continue
-
-                jugadores.append(match.group(1).strip())
-                kills.append(int(match.group(2)))
-
-            data = {
-                "equipo": equipo,
-                "game": partida,
-                "placement": posicion,
-                "jugadores": jugadores,
-                "kills": kills
-            }
-
-            status, response = enviar(data, "/modificar")
-
-            if status == 200:
-                await message.channel.send(
-                    f"✏️ Modificado correctamente\n"
-                    f"Equipo: {equipo}\n"
-                    f"Partida: {partida}"
-                )
-            else:
-                await message.channel.send(
-                    f"❌ Error API (HTTP {status})\n{response}"
-                )
-
-        except Exception as e:
-            await message.channel.send(f"❌ Error modificar\n{e}")
-
-        return
+    return jsonify({"ok": True})
 
 
-client.run(TOKEN)
+@app.route("/borrar", methods=["POST"])
+def borrar():
+
+    db = load()
+    db["equipos"] = {}
+    save(db)
+
+    return jsonify({"ok": True})
+
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=10000)
