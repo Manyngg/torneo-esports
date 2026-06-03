@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify
-import json
 import os
+import json
 
 app = Flask(__name__)
 
@@ -19,40 +19,25 @@ def save(data):
         json.dump(data, f, indent=4, ensure_ascii=False)
 
 
-def calcular_score(placement, kills):
-    if placement == 1:
-        mult = 1.6
-    elif placement <= 5:
-        mult = 1.4
-    elif placement <= 10:
-        mult = 1.2
-    else:
-        mult = 1
-    return round(kills * mult, 2)
+@app.route("/")
+def home():
+    return "🏆 WAHOO ONLINE - SERVER OK"
 
-
-# =========================
-# REPORT (ARREGLADO)
-# =========================
 
 @app.route("/report", methods=["POST"])
 def report():
-
     try:
         body = request.json
 
-        team = str(body["equipo"]).strip()
-        game = str(body["game"]).strip()
-        placement = int(body["placement"])
+        team = body.get("equipo")
+        game = str(body.get("game"))
+        placement = int(body.get("placement", 0))
 
-        players = body["jugadores"]
-        kills = body["kills"]
+        players = body.get("jugadores", [])
+        kills = body.get("kills", [])
 
-        # 🔥 FIX: asegurar int
-        kills = [int(k) for k in kills]
-
-        if len(players) != len(kills):
-            return jsonify({"error": "players/kills mismatch"}), 400
+        if not team:
+            return jsonify({"error": "no team"}), 400
 
         db = load()
 
@@ -62,10 +47,9 @@ def report():
         db["equipos"][team]["games"][game] = {
             "placement": placement,
             "kills": sum(kills),
-            "score": calcular_score(placement, sum(kills)),
             "players": {
-                players[i].strip(): kills[i]
-                for i in range(len(players))
+                players[i]: kills[i]
+                for i in range(min(len(players), len(kills)))
             }
         }
 
@@ -76,55 +60,17 @@ def report():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-
-# =========================
-# MODIFY
-# =========================
 
 @app.route("/modificar", methods=["POST"])
 def modificar():
+    return jsonify({"ok": True})
 
-    try:
-        body = request.json
-
-        team = str(body["equipo"]).strip()
-        game = str(body["game"]).strip()
-        placement = int(body["placement"])
-
-        players = body["jugadores"]
-        kills = [int(k) for k in body["kills"]]
-
-        db = load()
-
-        db["equipos"][team]["games"][game] = {
-            "placement": placement,
-            "kills": sum(kills),
-            "score": calcular_score(placement, sum(kills)),
-            "players": {
-                players[i].strip(): kills[i]
-                for i in range(len(players))
-            }
-        }
-
-        save(db)
-
-        return jsonify({"ok": True})
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-
-# =========================
-# RESET
-# =========================
 
 @app.route("/borrar", methods=["POST"])
 def borrar():
-
     db = load()
     db["equipos"] = {}
     save(db)
-
     return jsonify({"ok": True})
 
 
