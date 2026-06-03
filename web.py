@@ -180,7 +180,7 @@ text-shadow:0 0 15px #00ff66;
 text-align:center;
 }
 
-/* STREAM PEQUEÑO ENTRE TITULO Y TABLA */
+/* STREAM */
 .stream-box{
 display:flex;
 justify-content:center;
@@ -242,10 +242,10 @@ background:rgba(0,255,102,0.1);
 
 <h1>🏆 Liga CBS</h1>
 
-<!-- 🎥 STREAM ENTRE TITULO Y TABLA -->
+<!-- 🎥 TU STREAM MANYNN -->
 <div class="stream-box">
 <iframe
-    src="https://player.twitch.tv/?channel=manynn&parent=localhost"
+    src="https://player.twitch.tv/?channel=Manynn&parent=localhost"
     allowfullscreen>
 </iframe>
 </div>
