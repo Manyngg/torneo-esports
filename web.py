@@ -127,7 +127,6 @@ def home():
     ranking = []
     total_kills_global = 0
 
-    # duplicados
     posiciones_por_game = {}
 
     for team, data in equipos.items():
@@ -188,6 +187,7 @@ font-family:Arial;
 margin:20px;
 }
 
+/* HEADER */
 h1{
 text-align:center;
 color:#00aa55;
@@ -195,7 +195,7 @@ text-shadow:0 2px 10px rgba(0,0,0,0.15);
 font-size:44px;
 }
 
-/* LIVE ANIMATION */
+/* LIVE */
 .live{
 text-align:center;
 color:#d60000;
@@ -203,11 +203,9 @@ font-weight:bold;
 animation:blink 1s infinite;
 }
 
-@keyframes blink{
-50%{opacity:0.3;}
-}
+@keyframes blink{50%{opacity:0.3;}}
 
-/* STREAM LINKS (NO SE ELIMINA NUNCA) */
+/* STREAM LINKS */
 .stream-links{
 text-align:center;
 margin:10px 0;
@@ -228,7 +226,10 @@ box-shadow:0 6px 15px rgba(0,0,0,0.2);
 .tiktok{background:linear-gradient(45deg,#00ff66,#00ffaa);}
 .twitch{background:linear-gradient(45deg,#d6ff00,#aaff00);}
 
-/* CARDS (RESTAURADO COMPLETO) */
+/* =========================
+   CARDS CON COLORES GAMER
+========================= */
+
 .cards{
 display:flex;
 justify-content:center;
@@ -237,13 +238,41 @@ margin:20px 0;
 }
 
 .card{
-background:#1e1e1e;
-color:white;
 border-radius:14px;
 padding:12px 18px;
 min-width:140px;
 text-align:center;
-box-shadow:0 6px 0 #111, 0 12px 25px rgba(0,0,0,0.25);
+font-weight:bold;
+box-shadow:0 6px 0 rgba(0,0,0,0.25), 0 12px 25px rgba(0,0,0,0.25);
+transition:0.2s;
+}
+
+.card:hover{
+transform:translateY(-3px);
+}
+
+/* TOP TEAM */
+.card:nth-child(1){
+background:linear-gradient(145deg,#00ff66,#00ffaa);
+color:black;
+}
+
+/* SCORE */
+.card:nth-child(2){
+background:linear-gradient(145deg,#d6ff00,#fff200);
+color:black;
+}
+
+/* KILLS */
+.card:nth-child(3){
+background:linear-gradient(145deg,#00ff66,#aaff00);
+color:black;
+}
+
+/* GAMES */
+.card:nth-child(4){
+background:linear-gradient(145deg,#d6ff00,#ffea00);
+color:black;
 }
 
 /* TABLAS 3D */
@@ -293,36 +322,22 @@ color:#b59a00;
 
 <div class='live'>🔴 LIVE TOURNAMENT</div>
 
-<!-- CARDS RESTAURADOS -->
-<div class="cards">
-
-<div class="card">
-TOP TEAM<br>
-""" + str(top_team) + """
-</div>
-
-<div class="card">
-SCORE<br>
-""" + str(top_score) + """
-</div>
-
-<div class="card">
-KILLS<br>
-""" + str(total_kills_global) + """
-</div>
-
-<div class="card">
-GAMES<br>
-""" + str(len(allgames)) + """
-</div>
-
-</div>
-
-<!-- STREAM LINKS RESTAURADOS (NO SE TOCAN MÁS) -->
+<!-- STREAM LINKS -->
 <div class="stream-links">
-
 <a href="https://www.tiktok.com/@manyngg" target="_blank" class="btn tiktok">🎵 TikTok</a>
 <a href="https://www.twitch.tv/manyyn" target="_blank" class="btn twitch">🎮 Twitch</a>
+</div>
+
+<!-- CARDS -->
+<div class="cards">
+
+<div class="card">TOP TEAM<br>""" + str(top_team) + """</div>
+
+<div class="card">SCORE<br>""" + str(top_score) + """</div>
+
+<div class="card">KILLS<br>""" + str(total_kills_global) + """</div>
+
+<div class="card">GAMES<br>""" + str(len(allgames)) + """</div>
 
 </div>
 """
@@ -370,7 +385,7 @@ GAMES<br>
     html += "</table>"
 
     # =========================
-    # FRAGGER (SIN CAMBIOS)
+    # FRAGGER
     # =========================
 
     html += "<h2>🔥 FRAGGER TABLE</h2>"
