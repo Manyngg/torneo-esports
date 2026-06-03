@@ -177,9 +177,25 @@ margin:20px;
 h1{
 color:#00ff66;
 text-shadow:0 0 15px #00ff66;
+text-align:center;
 }
 
-/* TABLAS 3D */
+/* STREAM PEQUEÑO ENTRE TITULO Y TABLA */
+.stream-box{
+display:flex;
+justify-content:center;
+margin:15px 0 25px 0;
+}
+
+.stream-box iframe{
+width:420px;
+height:240px;
+border-radius:12px;
+border:2px solid #00ff66;
+box-shadow:0 0 20px rgba(0,255,102,0.4);
+}
+
+/* TABLAS */
 table{
 width:100%;
 border-collapse:collapse;
@@ -218,27 +234,6 @@ tr:hover{
 background:rgba(0,255,102,0.1);
 }
 
-/* 🎥 STREAM ABAJO PEQUEÑO */
-.stream-container{
-display:flex;
-justify-content:center;
-margin-top:20px;
-}
-
-.stream-box{
-width:420px;
-height:240px;
-border-radius:12px;
-overflow:hidden;
-box-shadow:0 0 20px rgba(0,255,102,0.4);
-border:2px solid #00ff66;
-}
-
-.stream-box iframe{
-width:100%;
-height:100%;
-}
-
 </style>
 
 </head>
@@ -246,6 +241,14 @@ height:100%;
 <body>
 
 <h1>🏆 Liga CBS</h1>
+
+<!-- 🎥 STREAM ENTRE TITULO Y TABLA -->
+<div class="stream-box">
+<iframe
+    src="https://player.twitch.tv/?channel=NOMBRE_CANAL&parent=localhost"
+    allowfullscreen>
+</iframe>
+</div>
 
 <table>
 
@@ -355,16 +358,6 @@ height:100%;
 
     html += """
 </table>
-
-<!-- 🎥 STREAM ABAJO -->
-<div class="stream-container">
-<div class="stream-box">
-<iframe
-    src="https://player.twitch.tv/?channel=NOMBRE_CANAL&parent=localhost"
-    allowfullscreen>
-</iframe>
-</div>
-</div>
 
 </body>
 </html>
