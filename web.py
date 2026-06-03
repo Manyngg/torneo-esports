@@ -43,6 +43,20 @@ def calcular_score(placement, kills):
 
 
 # =========================
+# COLORS (NEÓN VARIATIONS)
+# =========================
+
+GAME_COLORS = [
+    "#00ff66",  # verde fuerte
+    "#d6ff00",  # amarillo fosfo
+    "#66ff33",  # verde claro
+    "#ffff33",  # amarillo brillante
+    "#00ffaa",  # verde aqua neon
+    "#aaff00",  # amarillo verdoso
+]
+
+
+# =========================
 # REPORT
 # =========================
 
@@ -184,7 +198,7 @@ font-size:38px;
 margin-bottom:10px;
 }
 
-/* LINKS CARDS */
+/* LINKS */
 .links{
 display:flex;
 justify-content:center;
@@ -257,6 +271,12 @@ color:#d6ff00;
 text-shadow:0 0 20px #d6ff00;
 }
 
+/* GAME COLORS */
+.game-header{
+color:black;
+font-weight:bold;
+}
+
 </style>
 
 </head>
@@ -286,8 +306,18 @@ text-shadow:0 0 20px #d6ff00;
 
     html += "<table><tr><th>POS</th><th>TEAM</th>"
 
+    idx = 0
+
     for g in allgames:
-        html += "<th>GAME</th><th>POS</th><th>SCORE</th>"
+
+        color = GAME_COLORS[idx % len(GAME_COLORS)]
+        idx += 1
+
+        html += f"""
+        <th style='background:{color}' class='game-header'>GAME {g}<br>PLAYERS</th>
+        <th style='background:{color}' class='game-header'>POS</th>
+        <th style='background:{color}' class='game-header'>SCORE</th>
+        """
 
     html += "<th>TOTAL</th><th>KILLS</th></tr>"
 
@@ -311,6 +341,7 @@ text-shadow:0 0 20px #d6ff00;
                     players_txt += f"{p} : {k}<br>"
 
                 html += f"<td>{players_txt}</td><td>{game['placement']}</td><td>{game['score']}</td>"
+
             else:
                 html += "<td>-</td><td>-</td><td>-</td>"
 
