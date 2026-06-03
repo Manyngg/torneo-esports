@@ -242,7 +242,7 @@ background:rgba(0,255,102,0.1);
 
 <h1>🏆 Liga CBS</h1>
 
-<!-- 🎥 TU STREAM MANYNN -->
+<!-- 🎥 TU STREAM MANYyN -->
 <div class="stream-box">
 <iframe
     src="https://player.twitch.tv/?channel=Manynn&parent=localhost"
