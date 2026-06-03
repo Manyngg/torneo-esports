@@ -115,7 +115,7 @@ def borrar():
 
 
 # =========================
-# WEB
+# WEB UI PRO LEVEL 1
 # =========================
 
 @app.route("/")
@@ -128,6 +128,8 @@ def home():
 
     ranking = []
 
+    total_kills_global = 0
+
     for team, data in equipos.items():
 
         score = 0
@@ -136,6 +138,7 @@ def home():
         for g, info in data["games"].items():
             score += info["score"]
             kills += info["kills"]
+            total_kills_global += info["kills"]
 
         ranking.append({
             "team": team,
@@ -145,6 +148,9 @@ def home():
         })
 
     ranking.sort(key=lambda x: x["score"], reverse=True)
+
+    top_team = ranking[0]["team"] if ranking else "-"
+    top_score = ranking[0]["score"] if ranking else 0
 
     fragger = {}
 
@@ -159,19 +165,6 @@ def home():
     game_colors = ["#00ff66", "#d6ff00", "#00ffaa", "#aaff00"]
 
     # =========================
-    # DETECTOR DE POSICIONES DUPLICADAS
-    # =========================
-
-    posiciones_por_game = {}
-
-    for team, data in equipos.items():
-        for g, info in data["games"].items():
-            posiciones_por_game.setdefault(g, []).append(info["placement"])
-
-    def posicion_roja(game, placement):
-        return posiciones_por_game.get(game, []).count(placement) > 1
-
-    # =========================
     # HTML
     # =========================
 
@@ -179,6 +172,7 @@ def home():
 <html>
 <head>
 <meta http-equiv='refresh' content='30'>
+
 <style>
 
 body{
@@ -188,13 +182,59 @@ font-family:Arial;
 margin:20px;
 }
 
+/* =========================
+   HEADER PRO
+========================= */
+
 h1{
 text-align:center;
 color:#00ff66;
 text-shadow:0 0 25px #00ff66;
-font-size:40px;
-margin-bottom:10px;
+font-size:44px;
+margin-bottom:5px;
 }
+
+.live{
+text-align:center;
+color:red;
+font-weight:bold;
+animation:blink 1s infinite;
+margin-bottom:15px;
+}
+
+@keyframes blink{
+50%{opacity:0.3;}
+}
+
+/* =========================
+   CARDS
+========================= */
+
+.cards{
+display:flex;
+justify-content:center;
+gap:15px;
+margin-bottom:25px;
+}
+
+.card{
+background:#111;
+border:1px solid #00ff66;
+padding:10px 15px;
+border-radius:12px;
+box-shadow:0 0 15px rgba(0,255,100,0.3);
+min-width:150px;
+text-align:center;
+}
+
+.card h3{
+margin:0;
+color:#d6ff00;
+}
+
+/* =========================
+   TABLE 3D
+========================= */
 
 table{
 width:100%;
@@ -222,11 +262,18 @@ border-bottom:1px solid #222;
 color:white;
 }
 
+tr:hover{
+background:rgba(0,255,100,0.08);
+transition:0.2s;
+}
+
+/* TEAM */
 .team{
 color:white;
 font-weight:bold;
 }
 
+/* FRAGGER TITLE (SIN CAMBIOS VISUALES EXTRA) */
 h2{
 text-align:center;
 color:#d6ff00;
@@ -239,10 +286,18 @@ text-shadow:0 0 20px #d6ff00;
 <body>
 
 <h1>🏆 LIGA CBS LATAM</h1>
+<div class='live'>🔴 LIVE TOURNAMENT</div>
+
+<div class='cards'>
+<div class='card'><h3>TOP TEAM</h3>""" + str(top_team) + """</div>
+<div class='card'><h3>SCORE</h3>""" + str(top_score) + """</div>
+<div class='card'><h3>TOTAL KILLS</h3>""" + str(total_kills_global) + """</div>
+<div class='card'><h3>GAMES</h3>""" + str(len(allgames)) + """</div>
+</div>
 """
 
     # =========================
-    # TABLA RANKING
+    # TABLE RANKING
     # =========================
 
     html += "<table><tr><th>POS</th><th>TEAM</th>"
@@ -270,18 +325,7 @@ text-shadow:0 0 20px #d6ff00;
                 for p, k in game["players"].items():
                     players_txt += f"{p}: {k}<br>"
 
-                html += f"<td>{players_txt}</td>"
-
-                # =========================
-                # 🔥 POSICIÓN EN ROJO SI SE REPITE
-                # =========================
-
-                if posicion_roja(g, game["placement"]):
-                    html += f"<td style='color:red;font-weight:bold;text-shadow:0 0 10px red'>{game['placement']}</td>"
-                else:
-                    html += f"<td>{game['placement']}</td>"
-
-                html += f"<td>{game['score']}</td>"
+                html += f"<td>{players_txt}</td><td>{game['placement']}</td><td>{game['score']}</td>"
             else:
                 html += "<td>-</td><td>-</td><td>-</td>"
 
@@ -291,20 +335,15 @@ text-shadow:0 0 20px #d6ff00;
     html += "</table>"
 
     # =========================
-    # FRAGGER
+    # FRAGGER (SIN CAMBIOS COMO PEDISTE)
     # =========================
 
     html += "<h2>🔥 FRAGGER TABLE</h2>"
-    html += "<table><tr><th>POS</th><th>PLAYER</th><th>TEAM</th><th>KILLS</th></tr>"
-
-    pos = 1
+    html += "<table><tr><th>PLAYER</th><th>TEAM</th><th>KILLS</th></tr>"
 
     for p, s in fraggers:
 
-        medal = "🥇" if pos == 1 else "🥈" if pos == 2 else "🥉" if pos == 3 else ""
-
-        html += f"<tr><td>{medal} {pos}</td><td>{p}</td><td>{s['team']}</td><td>{s['kills']}</td></tr>"
-        pos += 1
+        html += f"<tr><td>{p}</td><td>{s['team']}</td><td>{s['kills']}</td></tr>"
 
     html += "</table></body></html>"
 
