@@ -245,7 +245,7 @@ background:rgba(0,255,102,0.1);
 <!-- 🎥 STREAM ENTRE TITULO Y TABLA -->
 <div class="stream-box">
 <iframe
-    src="https://player.twitch.tv/?channel=NOMBRE_CANAL&parent=localhost"
+    src="https://player.twitch.tv/?channel=manynn&parent=localhost"
     allowfullscreen>
 </iframe>
 </div>
