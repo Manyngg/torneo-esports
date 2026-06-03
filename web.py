@@ -36,89 +36,6 @@ def calcular_score(placement, teamkills):
 
 #################################################
 
-@app.route("/report", methods=["POST"])
-def report():
-    body = request.json
-
-    team = body["equipo"]
-    game = str(body["game"])
-    placement = int(body["placement"])
-    players = body["jugadores"]
-    kills = body["kills"]
-
-    db = load()
-
-    if team not in db["equipos"]:
-        db["equipos"][team] = {"games": {}, "players": {}}
-
-    if game in db["equipos"][team]["games"]:
-        return jsonify({"error": "game repetida"}), 400
-
-    teamkills = sum(kills)
-    score = calcular_score(placement, teamkills)
-
-    db["equipos"][team]["games"][game] = {
-        "placement": placement,
-        "kills": teamkills,
-        "score": score,
-        "players": {players[i]: kills[i] for i in range(len(players))}
-    }
-
-    for i, p in enumerate(players):
-        if p not in db["equipos"][team]["players"]:
-            db["equipos"][team]["players"][p] = {"kills": 0}
-        db["equipos"][team]["players"][p]["kills"] += kills[i]
-
-    save(db)
-    return jsonify({"ok": True})
-
-#################################################
-
-@app.route("/modificar", methods=["POST"])
-def modificar():
-    body = request.json
-
-    team = body["equipo"]
-    game = str(body["game"])
-
-    db = load()
-
-    if team not in db["equipos"]:
-        return jsonify({"error": "equipo no existe"}), 400
-
-    if game not in db["equipos"][team]["games"]:
-        return jsonify({"error": "partida no existe"}), 400
-
-    old = db["equipos"][team]["games"][game]
-
-    for p, k in old["players"].items():
-        if p in db["equipos"][team]["players"]:
-            db["equipos"][team]["players"][p]["kills"] -= k
-
-    placement = int(body["placement"])
-    players = body["jugadores"]
-    kills = body["kills"]
-
-    teamkills = sum(kills)
-    score = calcular_score(placement, teamkills)
-
-    db["equipos"][team]["games"][game] = {
-        "placement": placement,
-        "kills": teamkills,
-        "score": score,
-        "players": {players[i]: kills[i] for i in range(len(players))}
-    }
-
-    for i, p in enumerate(players):
-        if p not in db["equipos"][team]["players"]:
-            db["equipos"][team]["players"][p] = {"kills": 0}
-        db["equipos"][team]["players"][p]["kills"] += kills[i]
-
-    save(db)
-    return jsonify({"ok": True})
-
-#################################################
-
 @app.route("/")
 def home():
     db = load()
@@ -150,15 +67,15 @@ def home():
 
     ranking = sorted(ranking, key=lambda x: x["score"], reverse=True)
 
-    fragger = {}
+    fraggers = {}
 
     for team, data in equipos.items():
         for p, s in data["players"].items():
-            if p not in fragger:
-                fragger[p] = {"team": team, "kills": 0}
-            fragger[p]["kills"] += s["kills"]
+            if p not in fraggers:
+                fraggers[p] = {"team": team, "kills": 0}
+            fraggers[p]["kills"] += s["kills"]
 
-    fraggers = sorted(fragger.items(), key=lambda x: x[1]["kills"], reverse=True)
+    fraggers = sorted(fraggers.items(), key=lambda x: x[1]["kills"], reverse=True)
 
     html = """
 <html>
@@ -176,23 +93,8 @@ margin:20px;
 
 h1{
 color:#00ff66;
-text-shadow:0 0 15px #00ff66;
 text-align:center;
-}
-
-/* STREAM */
-.stream-box{
-display:flex;
-justify-content:center;
-margin:15px 0 25px 0;
-}
-
-.stream-box iframe{
-width:420px;
-height:240px;
-border-radius:12px;
-border:2px solid #00ff66;
-box-shadow:0 0 20px rgba(0,255,102,0.4);
+text-shadow:0 0 15px #00ff66;
 }
 
 /* TABLAS */
@@ -201,8 +103,7 @@ width:100%;
 border-collapse:collapse;
 margin-bottom:30px;
 background:rgba(255,255,255,0.05);
-backdrop-filter: blur(8px);
-border-radius:15px;
+border-radius:12px;
 overflow:hidden;
 box-shadow:0 10px 25px rgba(0,0,0,0.5);
 }
@@ -211,7 +112,6 @@ th{
 background:rgba(0,255,102,0.2);
 color:#00ff66;
 padding:10px;
-text-transform:uppercase;
 }
 
 td{
@@ -220,18 +120,18 @@ text-align:center;
 border-bottom:1px solid rgba(255,255,255,0.1);
 }
 
-.team{
-color:white;
-font-weight:bold;
+/* STREAM */
+.stream{
+display:flex;
+justify-content:center;
+margin-top:20px;
 }
 
-h2{
-color:#00ff66;
-text-shadow:0 0 10px #00ff66;
-}
-
-tr:hover{
-background:rgba(0,255,102,0.1);
+.stream iframe{
+width:420px;
+height:240px;
+border-radius:12px;
+border:2px solid #00ff66;
 }
 
 </style>
@@ -241,123 +141,44 @@ background:rgba(0,255,102,0.1);
 <body>
 
 <h1>🏆 Liga CBS</h1>
-
-<!-- 🎥 TU STREAM MANYyN -->
-<div class="stream-box">
-<iframe
-    src="https://player.twitch.tv/?channel=Manynn&parent=localhost"
-    allowfullscreen>
-</iframe>
-</div>
-
-<table>
-
-<tr>
-<th>POS</th>
-<th>TEAM</th>
 """
 
-    game_colors = ["#00ff66","#d6ff00","#00ffaa","#aaff00","#66ff00","#ffe600"]
-
-    idx = 0
-
-    for g in allgames:
-        color = game_colors[idx % len(game_colors)]
-        idx += 1
-
-        html += f"""
-<th style="background:{color};color:black;">GAME {g}</th>
-<th style="background:{color};color:black;">POS</th>
-<th style="background:{color};color:black;">SCORE</th>
-"""
-
-    html += """
-<th>TOTAL SCORE</th>
-<th>TOTAL KILLS</th>
-</tr>
-"""
-
-    pos = 1
+    # TABLA GENERAL
+    html += "<table><tr><th>TEAM</th><th>SCORE</th><th>KILLS</th></tr>"
 
     for r in ranking:
-
-        medal = ""
-        if pos == 1:
-            medal = "🥇"
-        elif pos == 2:
-            medal = "🥈"
-        elif pos == 3:
-            medal = "🥉"
-
         html += f"""
 <tr>
-<td>{medal} {pos}</td>
-<td class='team'>{r['team']}</td>
-"""
-
-        for g in allgames:
-            if g in r["games"]:
-                game = r["games"][g]
-
-                players = ""
-                for p, k in game["players"].items():
-                    players += f"{p}:{k}<br>"
-
-                html += f"""
-<td>{players}</td>
-<td>{game['placement']}</td>
-<td>{game['score']}</td>
-"""
-            else:
-                html += "<td>-</td><td>-</td><td>-</td>"
-
-        html += f"""
+<td>{r['team']}</td>
 <td>{r['score']}</td>
 <td>{r['kills']}</td>
 </tr>
 """
-        pos += 1
 
-    html += """
-</table>
+    html += "</table>"
 
-<h2>🔥 FRAGGER TABLE</h2>
-
-<table>
-
-<tr>
-<th>POS</th>
-<th>PLAYER</th>
-<th>TEAM</th>
-<th>KILLS</th>
-</tr>
-"""
-
-    pos = 1
+    # FRAGGER
+    html += "<h2 style='color:#00ff66'>🔥 FRAGGER</h2><table><tr><th>PLAYER</th><th>TEAM</th><th>KILLS</th></tr>"
 
     for p, s in fraggers:
-
-        medal = ""
-        if pos == 1:
-            medal = "🥇"
-        elif pos == 2:
-            medal = "🥈"
-        elif pos == 3:
-            medal = "🥉"
-
         html += f"""
 <tr>
-<td>{medal} {pos}</td>
 <td>{p}</td>
 <td>{s['team']}</td>
 <td>{s['kills']}</td>
 </tr>
 """
 
-        pos += 1
+    html += "</table>"
 
+    # 🎥 STREAM CORRECTO
     html += """
-</table>
+<div class="stream">
+<iframe
+src="https://player.twitch.tv/?channel=manyyn&parent=localhost"
+allowfullscreen>
+</iframe>
+</div>
 
 </body>
 </html>
