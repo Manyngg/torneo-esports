@@ -115,7 +115,7 @@ def borrar():
 
 
 # =========================
-# WEB (MISMO DISEÑO 3D RESTAURADO)
+# WEB
 # =========================
 
 @app.route("/")
@@ -158,11 +158,27 @@ def home():
 
     game_colors = ["#00ff66", "#d6ff00", "#00ffaa", "#aaff00"]
 
+    # =========================
+    # DETECTOR DE POSICIONES DUPLICADAS
+    # =========================
+
+    posiciones_por_game = {}
+
+    for team, data in equipos.items():
+        for g, info in data["games"].items():
+            posiciones_por_game.setdefault(g, []).append(info["placement"])
+
+    def posicion_roja(game, placement):
+        return posiciones_por_game.get(game, []).count(placement) > 1
+
+    # =========================
+    # HTML
+    # =========================
+
     html = """
 <html>
 <head>
 <meta http-equiv='refresh' content='30'>
-
 <style>
 
 body{
@@ -178,30 +194,6 @@ color:#00ff66;
 text-shadow:0 0 25px #00ff66;
 font-size:40px;
 margin-bottom:10px;
-}
-
-.links{
-display:flex;
-justify-content:center;
-gap:20px;
-margin-bottom:25px;
-}
-
-.link-box{
-display:flex;
-align-items:center;
-gap:10px;
-padding:10px 18px;
-border-radius:12px;
-background:#111;
-border:1px solid #00ff66;
-box-shadow:0 0 20px rgba(0,255,100,0.4);
-}
-
-.link-box a{
-color:white;
-font-weight:bold;
-text-decoration:none;
 }
 
 table{
@@ -242,28 +234,15 @@ text-shadow:0 0 20px #d6ff00;
 }
 
 </style>
-
 </head>
 
 <body>
 
 <h1>🏆 LIGA CBS LATAM</h1>
-
-<div class="links">
-
-<div class="link-box">
-<a href="https://www.tiktok.com/@manyngg" target="_blank">🎵 TikTok</a>
-</div>
-
-<div class="link-box">
-<a href="https://www.twitch.tv/manyyn" target="_blank">🎮 Twitch</a>
-</div>
-
-</div>
 """
 
     # =========================
-    # RANKING
+    # TABLA RANKING
     # =========================
 
     html += "<table><tr><th>POS</th><th>TEAM</th>"
@@ -291,7 +270,18 @@ text-shadow:0 0 20px #d6ff00;
                 for p, k in game["players"].items():
                     players_txt += f"{p}: {k}<br>"
 
-                html += f"<td>{players_txt}</td><td>{game['placement']}</td><td>{game['score']}</td>"
+                html += f"<td>{players_txt}</td>"
+
+                # =========================
+                # 🔥 POSICIÓN EN ROJO SI SE REPITE
+                # =========================
+
+                if posicion_roja(g, game["placement"]):
+                    html += f"<td style='color:red;font-weight:bold;text-shadow:0 0 10px red'>{game['placement']}</td>"
+                else:
+                    html += f"<td>{game['placement']}</td>"
+
+                html += f"<td>{game['score']}</td>"
             else:
                 html += "<td>-</td><td>-</td><td>-</td>"
 
