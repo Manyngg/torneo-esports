@@ -41,7 +41,6 @@ def calcular_score(placement, kills):
 
 @app.route("/report", methods=["POST"])
 def report():
-
     body = request.json
 
     team = str(body.get("equipo", "")).strip()
@@ -76,7 +75,6 @@ def report():
 
 @app.route("/modificar", methods=["POST"])
 def modificar():
-
     body = request.json
 
     team = str(body.get("equipo", "")).strip()
@@ -140,7 +138,6 @@ def home():
             posiciones_por_game[g][pos] += 1
 
     for team, data in equipos.items():
-
         score = 0
         kills = 0
 
@@ -191,7 +188,6 @@ font-family:Arial;
 margin:20px;
 }
 
-/* HEADER */
 h1{
 text-align:center;
 color:#00aa55;
@@ -199,20 +195,19 @@ text-shadow:0 2px 10px rgba(0,0,0,0.15);
 font-size:44px;
 }
 
-/* LIVE ANIMATION RESTAURADA */
+/* LIVE ANIMATION */
 .live{
 text-align:center;
 color:#d60000;
 font-weight:bold;
 animation:blink 1s infinite;
-margin-bottom:10px;
 }
 
 @keyframes blink{
 50%{opacity:0.3;}
 }
 
-/* STREAM LINKS */
+/* STREAM LINKS (NO SE ELIMINA NUNCA) */
 .stream-links{
 text-align:center;
 margin:10px 0;
@@ -233,7 +228,7 @@ box-shadow:0 6px 15px rgba(0,0,0,0.2);
 .tiktok{background:linear-gradient(45deg,#00ff66,#00ffaa);}
 .twitch{background:linear-gradient(45deg,#d6ff00,#aaff00);}
 
-/* DASHBOARD CARDS RESTAURADOS */
+/* CARDS (RESTAURADO COMPLETO) */
 .cards{
 display:flex;
 justify-content:center;
@@ -249,11 +244,6 @@ padding:12px 18px;
 min-width:140px;
 text-align:center;
 box-shadow:0 6px 0 #111, 0 12px 25px rgba(0,0,0,0.25);
-}
-
-.card h3{
-color:#d6ff00;
-margin:0;
 }
 
 /* TABLAS 3D */
@@ -288,7 +278,7 @@ color:red !important;
 font-weight:bold;
 }
 
-/* TITULO FRAGGER */
+/* FRAGGER */
 h2{
 text-align:center;
 color:#b59a00;
@@ -303,30 +293,32 @@ color:#b59a00;
 
 <div class='live'>🔴 LIVE TOURNAMENT</div>
 
+<!-- CARDS RESTAURADOS -->
 <div class="cards">
 
 <div class="card">
-<h3>TOP TEAM</h3>
+TOP TEAM<br>
 """ + str(top_team) + """
 </div>
 
 <div class="card">
-<h3>SCORE</h3>
+SCORE<br>
 """ + str(top_score) + """
 </div>
 
 <div class="card">
-<h3>TOTAL KILLS</h3>
+KILLS<br>
 """ + str(total_kills_global) + """
 </div>
 
 <div class="card">
-<h3>GAMES</h3>
+GAMES<br>
 """ + str(len(allgames)) + """
 </div>
 
 </div>
 
+<!-- STREAM LINKS RESTAURADOS (NO SE TOCAN MÁS) -->
 <div class="stream-links">
 
 <a href="https://www.tiktok.com/@manyngg" target="_blank" class="btn tiktok">🎵 TikTok</a>
@@ -336,7 +328,7 @@ color:#b59a00;
 """
 
     # =========================
-    # TABLES
+    # TABLA GENERAL
     # =========================
 
     html += "<table><tr><th>POS</th><th>TEAM</th>"
@@ -377,7 +369,10 @@ color:#b59a00;
 
     html += "</table>"
 
-    # FRAGGER
+    # =========================
+    # FRAGGER (SIN CAMBIOS)
+    # =========================
+
     html += "<h2>🔥 FRAGGER TABLE</h2>"
     html += "<table><tr><th>POS</th><th>PLAYER</th><th>TEAM</th><th>KILLS</th></tr>"
 
