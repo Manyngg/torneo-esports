@@ -167,85 +167,76 @@ def home():
 
 <style>
 
-/* 🌌 FONDO */
 body{
-background:linear-gradient(135deg,#0a0a0a,#111,#0a0a0a);
+background:#0a0a0a;
 color:white;
 font-family:Arial;
 margin:20px;
 }
 
-/* 🏆 TITULO */
 h1{
 color:#00ff66;
 text-shadow:0 0 15px #00ff66;
 }
 
-/* 🎴 TABLAS 3D MODERNAS */
+/* TABLAS 3D */
 table{
 width:100%;
 border-collapse:collapse;
 margin-bottom:30px;
-
-/* efecto tarjeta 3D */
-background:rgba(255,255,255,0.08);
+background:rgba(255,255,255,0.05);
 backdrop-filter: blur(8px);
 border-radius:15px;
 overflow:hidden;
-box-shadow:
-0 10px 25px rgba(0,0,0,0.5),
-0 0 20px rgba(0,255,102,0.3);
-transform: perspective(900px);
-transition:0.3s;
+box-shadow:0 10px 25px rgba(0,0,0,0.5);
 }
 
-table:hover{
-transform: translateY(-5px) perspective(900px) rotateX(2deg);
-box-shadow:
-0 15px 35px rgba(0,0,0,0.6),
-0 0 30px rgba(0,255,102,0.5);
-}
-
-/* encabezados */
 th{
 background:rgba(0,255,102,0.2);
 color:#00ff66;
-padding:12px;
+padding:10px;
 text-transform:uppercase;
-border-bottom:1px solid rgba(0,255,102,0.5);
 }
 
-/* celdas */
 td{
-padding:10px;
+padding:8px;
 text-align:center;
-color:white;
 border-bottom:1px solid rgba(255,255,255,0.1);
 }
 
-/* equipos */
 .team{
-color:#00ff66;
+color:white;
 font-weight:bold;
-text-shadow:0 0 5px #00ff66;
 }
 
-/* players */
-.players{
-font-size:12px;
-line-height:1.5;
-opacity:0.9;
-}
-
-/* fragger titulo */
 h2{
 color:#00ff66;
 text-shadow:0 0 10px #00ff66;
 }
 
-/* hover filas */
 tr:hover{
-background:rgba(0,255,102,0.08);
+background:rgba(0,255,102,0.1);
+}
+
+/* 🎥 STREAM ABAJO PEQUEÑO */
+.stream-container{
+display:flex;
+justify-content:center;
+margin-top:20px;
+}
+
+.stream-box{
+width:420px;
+height:240px;
+border-radius:12px;
+overflow:hidden;
+box-shadow:0 0 20px rgba(0,255,102,0.4);
+border:2px solid #00ff66;
+}
+
+.stream-box iframe{
+width:100%;
+height:100%;
 }
 
 </style>
@@ -254,9 +245,10 @@ background:rgba(0,255,102,0.08);
 
 <body>
 
-<h1>🏆 Liga CBS LATAM</h1>
+<h1>🏆 Liga CBS</h1>
 
 <table>
+
 <tr>
 <th>POS</th>
 <th>TEAM</th>
@@ -309,7 +301,7 @@ background:rgba(0,255,102,0.08);
                     players += f"{p}:{k}<br>"
 
                 html += f"""
-<td class='players'>{players}</td>
+<td>{players}</td>
 <td>{game['placement']}</td>
 <td>{game['score']}</td>
 """
@@ -363,6 +355,16 @@ background:rgba(0,255,102,0.08);
 
     html += """
 </table>
+
+<!-- 🎥 STREAM ABAJO -->
+<div class="stream-container">
+<div class="stream-box">
+<iframe
+    src="https://player.twitch.tv/?channel=NOMBRE_CANAL&parent=localhost"
+    allowfullscreen>
+</iframe>
+</div>
+</div>
 
 </body>
 </html>
