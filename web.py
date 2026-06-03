@@ -130,6 +130,23 @@ def home():
 
     total_kills_global = 0
 
+    # =========================
+    # DETECTAR POS REPETIDAS
+    # =========================
+
+    posiciones_por_game = {}
+
+    for team, data in equipos.items():
+        for g, info in data["games"].items():
+
+            pos = info["placement"]
+
+            if g not in posiciones_por_game:
+                posiciones_por_game[g] = {}
+
+            posiciones_por_game[g].setdefault(pos, 0)
+            posiciones_por_game[g][pos] += 1
+
     for team, data in equipos.items():
 
         score = 0
@@ -175,10 +192,6 @@ def home():
 
 <style>
 
-/* =========================
-   BODY (HUESO)
-========================= */
-
 body{
 background:#f2eee6;
 color:#111;
@@ -186,10 +199,7 @@ font-family:Arial;
 margin:20px;
 }
 
-/* =========================
-   HEADER
-========================= */
-
+/* HEADER */
 h1{
 text-align:center;
 color:#00aa55;
@@ -198,22 +208,7 @@ font-size:44px;
 margin-bottom:5px;
 }
 
-.live{
-text-align:center;
-color:#d60000;
-font-weight:bold;
-animation:blink 1s infinite;
-margin-bottom:10px;
-}
-
-@keyframes blink{
-50%{opacity:0.3;}
-}
-
-/* =========================
-   STREAM BUTTONS
-========================= */
-
+/* STREAM */
 .stream-links{
 text-align:center;
 margin:10px 0;
@@ -228,31 +223,28 @@ border-radius:12px;
 text-decoration:none;
 font-weight:bold;
 color:black;
-transition:0.2s;
 box-shadow:0 6px 15px rgba(0,0,0,0.2);
 display:flex;
 align-items:center;
 gap:6px;
 }
 
-.btn:hover{
-transform:scale(1.08);
+.tiktok{background:linear-gradient(45deg,#00ff66,#00ffaa);}
+.twitch{background:linear-gradient(45deg,#d6ff00,#aaff00);}
+
+.btn:hover{transform:scale(1.08);}
+
+/* LIVE */
+.live{
+text-align:center;
+color:#d60000;
+font-weight:bold;
+animation:blink 1s infinite;
 }
 
-/* TikTok */
-.tiktok{
-background:linear-gradient(45deg,#00ff66,#00ffaa);
-}
+@keyframes blink{50%{opacity:0.3;}}
 
-/* Twitch */
-.twitch{
-background:linear-gradient(45deg,#d6ff00,#aaff00);
-}
-
-/* =========================
-   CARDS
-========================= */
-
+/* CARDS */
 .cards{
 display:flex;
 justify-content:center;
@@ -267,37 +259,22 @@ border-radius:14px;
 padding:12px 18px;
 min-width:140px;
 text-align:center;
-box-shadow:
-0 6px 0 #111,
-0 12px 25px rgba(0,0,0,0.25);
-transform:translateY(0);
-transition:0.2s;
+box-shadow:0 6px 0 #111, 0 12px 25px rgba(0,0,0,0.25);
 }
 
-.card:hover{
-transform:translateY(-3px);
-}
-
-.card h3{
-margin:0;
-color:#d6ff00;
-}
-
-/* =========================
-   TABLAS 3D MODERNAS
-========================= */
+/* TABLAS (GRIS CLARO + 3D MODERNO) */
 
 table{
 width:100%;
 border-collapse:collapse;
 margin-bottom:30px;
-background:linear-gradient(145deg,#1a1a1a,#2a2a2a);
+background:#e6e6e6;
 border-radius:16px;
 overflow:hidden;
 
 box-shadow:
-0 10px 0 #111,
-0 18px 35px rgba(0,0,0,0.35);
+0 10px 0 #bdbdbd,
+0 18px 35px rgba(0,0,0,0.25);
 
 transform:perspective(1000px) rotateX(2deg);
 }
@@ -305,34 +282,32 @@ transform:perspective(1000px) rotateX(2deg);
 th{
 background:#00ff66;
 color:black;
-font-weight:bold;
 padding:12px;
 text-transform:uppercase;
-letter-spacing:1px;
 }
 
 td{
 padding:10px;
 text-align:center;
-border-bottom:1px solid #333;
-color:white;
+border-bottom:1px solid #cfcfcf;
+color:#111;
 }
 
 tr:hover{
-background:rgba(0,255,100,0.12);
-transition:0.2s;
+background:rgba(0,255,100,0.15);
 }
 
-.team{
-color:white;
+/* DUPLICADOS */
+.duplicate-pos{
+color:red !important;
 font-weight:bold;
+text-shadow:0 0 8px rgba(255,0,0,0.5);
 }
 
 /* TITULOS */
 h2{
 text-align:center;
 color:#b59a00;
-text-shadow:0 2px 10px rgba(0,0,0,0.2);
 }
 
 </style>
@@ -342,32 +317,17 @@ text-shadow:0 2px 10px rgba(0,0,0,0.2);
 
 <h1>🏆 LIGA CBS LATAM</h1>
 
-<div class="stream-links">
-
-<a href="https://www.tiktok.com/@manyngg" target="_blank" class="btn tiktok">
-🎵 TikTok
-</a>
-
-<a href="https://www.twitch.tv/manyyn" target="_blank" class="btn twitch">
-🎮 Twitch
-</a>
-
-</div>
-
 <div class='live'>🔴 LIVE TOURNAMENT</div>
 
 <div class="cards">
-<div class="card"><h3>TOP TEAM</h3>""" + str(top_team) + """</div>
-<div class="card"><h3>SCORE</h3>""" + str(top_score) + """</div>
-<div class="card"><h3>TOTAL KILLS</h3>""" + str(total_kills_global) + """</div>
-<div class="card"><h3>GAMES</h3>""" + str(len(allgames)) + """</div>
+<div class="card">TOP TEAM<br>""" + str(top_team) + """</div>
+<div class="card">SCORE<br>""" + str(top_score) + """</div>
+<div class="card">KILLS<br>""" + str(total_kills_global) + """</div>
+<div class="card">GAMES<br>""" + str(len(allgames)) + """</div>
 </div>
 """
 
-    # =========================
-    # TABLE RANKING
-    # =========================
-
+    # TABLE
     html += "<table><tr><th>POS</th><th>TEAM</th>"
 
     for g in allgames:
@@ -382,18 +342,22 @@ text-shadow:0 2px 10px rgba(0,0,0,0.2);
 
         medal = "🥇" if pos == 1 else "🥈" if pos == 2 else "🥉" if pos == 3 else ""
 
-        html += f"<tr><td>{medal} {pos}</td><td class='team'>{r['team']}</td>"
+        html += f"<tr><td>{medal} {pos}</td><td>{r['team']}</td>"
 
         for g in allgames:
 
             if g in r["games"]:
                 game = r["games"][g]
 
+                cls = ""
+                if g in posiciones_por_game and posiciones_por_game[g].get(game["placement"], 0) > 1:
+                    cls = "duplicate-pos"
+
                 players_txt = ""
                 for p, k in game["players"].items():
                     players_txt += f"{p}: {k}<br>"
 
-                html += f"<td>{players_txt}</td><td>{game['placement']}</td><td>{game['score']}</td>"
+                html += f"<td>{players_txt}</td><td class='{cls}'>{game['placement']}</td><td>{game['score']}</td>"
             else:
                 html += "<td>-</td><td>-</td><td>-</td>"
 
@@ -402,10 +366,7 @@ text-shadow:0 2px 10px rgba(0,0,0,0.2);
 
     html += "</table>"
 
-    # =========================
     # FRAGGER
-    # =========================
-
     html += "<h2>🔥 FRAGGER TABLE</h2>"
     html += "<table><tr><th>PLAYER</th><th>TEAM</th><th>KILLS</th></tr>"
 
