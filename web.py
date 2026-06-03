@@ -69,7 +69,6 @@ def report():
         }
 
         save(db)
-
         return jsonify({"ok": True})
 
     except Exception as e:
@@ -105,7 +104,6 @@ def modificar():
         }
 
         save(db)
-
         return jsonify({"ok": True})
 
     except Exception as e:
@@ -125,7 +123,7 @@ def borrar():
 
 
 # =========================
-# WEB (TU DISEÑO RESTAURADO)
+# WEB FINAL (CON LINKS RESTAURADOS)
 # =========================
 
 @app.route("/")
@@ -167,7 +165,7 @@ def home():
     fraggers = sorted(fragger.items(), key=lambda x: x[1]["kills"], reverse=True)
 
     # =========================
-    # HTML ORIGINAL RESTAURADO
+    # HTML
     # =========================
 
     html = """
@@ -192,6 +190,43 @@ font-size:38px;
 margin-bottom:10px;
 }
 
+/* LINKS RESTAURADOS */
+.links{
+display:flex;
+justify-content:center;
+gap:20px;
+margin-bottom:25px;
+}
+
+.link-box{
+display:flex;
+align-items:center;
+gap:10px;
+padding:10px 18px;
+border-radius:12px;
+background:#111;
+border:1px solid #00ff66;
+box-shadow:0 0 15px rgba(0,255,100,0.3);
+transition:0.3s;
+}
+
+.link-box:hover{
+transform:scale(1.05);
+box-shadow:0 0 25px #00ff66;
+}
+
+.link-box img{
+width:22px;
+height:22px;
+}
+
+.link-box a{
+color:white;
+text-decoration:none;
+font-weight:bold;
+}
+
+/* TABLAS */
 table{
 width:100%;
 border-collapse:collapse;
@@ -226,6 +261,10 @@ color:#d6ff00;
 text-shadow:0 0 20px #d6ff00;
 }
 
+/* LINKS */
+"""
+
+    html += """
 </style>
 
 </head>
@@ -233,10 +272,24 @@ text-shadow:0 0 20px #d6ff00;
 <body>
 
 <h1>🏆 LIGA CBS</h1>
+
+<div class="links">
+
+<div class="link-box">
+<img src="https://cdn-icons-png.flaticon.com/512/3046/3046120.png">
+<a href="https://www.tiktok.com/@manyngg" target="_blank">TikTok</a>
+</div>
+
+<div class="link-box">
+<img src="https://cdn-icons-png.flaticon.com/512/5968/5968819.png">
+<a href="https://www.twitch.tv/manyyn" target="_blank">Twitch</a>
+</div>
+
+</div>
 """
 
     # =========================
-    # RANKING TABLE
+    # RANKING
     # =========================
 
     html += "<table><tr><th>POS</th><th>TEAM</th>"
