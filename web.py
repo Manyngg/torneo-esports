@@ -1,3 +1,161 @@
+from flask import Flask, request, jsonify
+import json
+import os
+
+app = Flask(__name__)
+
+DB = "data.json"
+
+
+# =========================
+# DB SAFE
+# =========================
+
+def load():
+    if not os.path.exists(DB):
+        return {"equipos": {}}
+
+    with open(DB, "r", encoding="utf8") as f:
+        try:
+            return json.load(f)
+        except:
+            return {"equipos": {}}
+
+
+def save(data):
+    tmp = DB + ".tmp"
+
+    with open(tmp, "w", encoding="utf8") as f:
+        json.dump(data, f, indent=4, ensure_ascii=False)
+
+    os.replace(tmp, DB)
+
+
+# =========================
+# SCORE SYSTEM
+# =========================
+
+def calcular_score(placement, teamkills):
+
+    if placement == 1:
+        mult = 1.6
+    elif placement <= 5:
+        mult = 1.4
+    elif placement <= 10:
+        mult = 1.2
+    else:
+        mult = 1
+
+    return round(teamkills * mult, 2)
+
+
+# =========================
+# REPORT MATCH
+# =========================
+
+@app.route("/report", methods=["POST"])
+def report():
+
+    body = request.json
+
+    team = body["equipo"]
+    game = str(body["game"])
+    placement = int(body["placement"])
+    players = body["jugadores"]
+    kills = body["kills"]
+
+    db = load()
+
+    if team not in db["equipos"]:
+        db["equipos"][team] = {"games": {}, "players": {}}
+
+    if game in db["equipos"][team]["games"]:
+        return jsonify({"error": "game repetida"}), 400
+
+    teamkills = sum(kills)
+    score = calcular_score(placement, teamkills)
+
+    db["equipos"][team]["games"][game] = {
+        "placement": placement,
+        "kills": teamkills,
+        "score": score,
+        "players": {
+            players[i]: kills[i] for i in range(len(players))
+        }
+    }
+
+    for i, p in enumerate(players):
+        if p not in db["equipos"][team]["players"]:
+            db["equipos"][team]["players"][p] = 0
+
+        db["equipos"][team]["players"][p] += kills[i]
+
+    save(db)
+
+    return jsonify({"ok": True})
+
+
+# =========================
+# MODIFY MATCH
+# =========================
+
+@app.route("/modificar", methods=["POST"])
+def modificar():
+
+    body = request.json
+
+    team = body["equipo"]
+    game = str(body["game"])
+
+    db = load()
+
+    if team not in db["equipos"]:
+        return jsonify({"error": "equipo no existe"}), 400
+
+    if game not in db["equipos"][team]["games"]:
+        return jsonify({"error": "partida no existe"}), 400
+
+    old = db["equipos"][team]["games"][game]
+
+    for p, k in old["players"].items():
+
+        if isinstance(k, dict):
+            k = k.get("kills", 0)
+
+        if p in db["equipos"][team]["players"]:
+            db["equipos"][team]["players"][p] -= k
+
+    placement = int(body["placement"])
+    players = body["jugadores"]
+    kills = body["kills"]
+
+    teamkills = sum(kills)
+    score = calcular_score(placement, teamkills)
+
+    db["equipos"][team]["games"][game] = {
+        "placement": placement,
+        "kills": teamkills,
+        "score": score,
+        "players": {
+            players[i]: kills[i] for i in range(len(players))
+        }
+    }
+
+    for i, p in enumerate(players):
+        if p not in db["equipos"][team]["players"]:
+            db["equipos"][team]["players"][p] = 0
+
+        db["equipos"][team]["players"][p] += kills[i]
+
+    save(db)
+
+    return jsonify({"ok": True})
+
+
+# =========================
+# HOME WEB UI
+# =========================
+
 @app.route("/")
 def home():
 
@@ -43,7 +201,6 @@ def home():
     fragger = {}
 
     for team, data in equipos.items():
-
         for p, k in data["players"].items():
             fragger[p] = fragger.get(p, {"team": team, "kills": 0})
             fragger[p]["kills"] += k
@@ -55,7 +212,7 @@ def home():
     )
 
     # =========================
-    # HTML STYLE PRO
+    # HTML DESIGN PRO
     # =========================
 
     html = """
@@ -73,44 +230,43 @@ margin:20px;
 }
 
 h1{
-color:#b6ff00;
-text-shadow:0 0 25px #b6ff00, 0 0 50px #00ff66;
-font-size:40px;
 text-align:center;
+color:#b6ff00;
+text-shadow:0 0 25px #00ff66, 0 0 40px #b6ff00;
+font-size:42px;
 }
 
 /* LINKS */
 .links{
 text-align:center;
-margin:10px 0 25px 0;
+margin:15px 0;
 }
 
 .links a{
 color:#00ff66;
 text-decoration:none;
-margin:0 15px;
-font-weight:bold;
-font-size:18px;
-padding:8px 15px;
-border:1px solid #00ff66;
-border-radius:10px;
-box-shadow:0 0 15px #00ff66;
+margin:0 12px;
+padding:10px 18px;
+border:2px solid #00ff66;
+border-radius:12px;
+box-shadow:0 0 20px #00ff66;
 transition:0.3s;
+font-weight:bold;
 }
 
 .links a:hover{
 background:#00ff66;
 color:black;
-box-shadow:0 0 25px #b6ff00;
+box-shadow:0 0 30px #b6ff00;
 }
 
-/* TABLA 3D */
+/* TABLE 3D */
 table{
 width:100%;
 border-collapse:collapse;
 margin-bottom:30px;
-background: rgba(20,20,20,0.6);
-box-shadow:0 10px 40px rgba(0,255,100,0.2);
+background: rgba(20,20,20,0.7);
+box-shadow:0 15px 50px rgba(0,255,100,0.25);
 border-radius:15px;
 overflow:hidden;
 transform: perspective(900px) rotateX(2deg);
@@ -122,30 +278,25 @@ text-align:center;
 border:1px solid rgba(255,255,255,0.05);
 }
 
-th{
-text-shadow:0 0 10px black;
-}
-
-/* TEAM */
 .team{
 color:#00ff66;
 font-weight:bold;
 text-shadow:0 0 10px #00ff66;
 }
 
-/* PLAYERS */
 .players{
 font-size:12px;
 line-height:1.5;
 }
 
-/* FRAGGER TITLE */
+/* FRAGGER */
 h2{
 text-align:center;
+color:#b6ff00;
 text-shadow:0 0 20px #b6ff00;
 }
 
-/* hover filas */
+/* HOVER ROW */
 tr:hover{
 background:rgba(0,255,102,0.08);
 }
@@ -169,14 +320,7 @@ background:rgba(0,255,102,0.08);
 <th>TEAM</th>
 """
 
-    # =========================
-    # COLORS GAME (NEON VARIATION)
-    # =========================
-
-    colors = [
-        "#00ff66", "#b6ff00", "#00ffaa",
-        "#aaff00", "#66ff33", "#d4ff00"
-    ]
+    colors = ["#00ff66", "#b6ff00", "#00ffaa", "#aaff00", "#66ff33", "#d4ff00"]
 
     idx = 0
 
@@ -186,9 +330,7 @@ background:rgba(0,255,102,0.08);
         idx += 1
 
         html += f"""
-<th style='background:{color};color:black;box-shadow:0 0 15px {color}'>
-GAME {g}<br>PLAYERS
-</th>
+<th style='background:{color};color:black'>GAME {g}<br>PLAYERS</th>
 <th style='background:{color};color:black'>POS</th>
 <th style='background:{color};color:black'>SCORE</th>
 """
@@ -198,10 +340,6 @@ GAME {g}<br>PLAYERS
 <th>TOTAL KILLS</th>
 </tr>
 """
-
-    # =========================
-    # ROWS
-    # =========================
 
     pos = 1
 
@@ -224,6 +362,8 @@ GAME {g}<br>PLAYERS
                 players_txt = ""
 
                 for p, k in game["players"].items():
+                    if isinstance(k, dict):
+                        k = k.get("kills", 0)
                     players_txt += f"{p}:{k}<br>"
 
                 html += f"""
@@ -273,3 +413,11 @@ GAME {g}<br>PLAYERS
 """
 
     return html
+
+
+# =========================
+# RUN (RENDER READY)
+# =========================
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=10000)
