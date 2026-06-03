@@ -71,7 +71,7 @@ def report():
 
 
 # =========================
-# MODIFY
+# MODIFICAR
 # =========================
 
 @app.route("/modificar", methods=["POST"])
@@ -115,7 +115,7 @@ def borrar():
 
 
 # =========================
-# WEB UI PRO LEVEL 1
+# WEB UI
 # =========================
 
 @app.route("/")
@@ -182,9 +182,7 @@ font-family:Arial;
 margin:20px;
 }
 
-/* =========================
-   HEADER PRO
-========================= */
+/* ================= HEADER ================= */
 
 h1{
 text-align:center;
@@ -199,22 +197,52 @@ text-align:center;
 color:red;
 font-weight:bold;
 animation:blink 1s infinite;
-margin-bottom:15px;
+margin-bottom:10px;
 }
 
 @keyframes blink{
 50%{opacity:0.3;}
 }
 
-/* =========================
-   CARDS
-========================= */
+/* ================= STREAM BUTTONS ================= */
+
+.stream-links{
+text-align:center;
+margin:10px 0;
+display:flex;
+justify-content:center;
+gap:15px;
+}
+
+.btn{
+padding:10px 18px;
+border-radius:10px;
+text-decoration:none;
+font-weight:bold;
+color:black;
+transition:0.2s;
+box-shadow:0 0 15px rgba(0,0,0,0.5);
+}
+
+.btn:hover{
+transform:scale(1.08);
+}
+
+.tiktok{
+background:linear-gradient(45deg,#00ff66,#00ffaa);
+}
+
+.twitch{
+background:linear-gradient(45deg,#d6ff00,#aaff00);
+}
+
+/* ================= CARDS ================= */
 
 .cards{
 display:flex;
 justify-content:center;
 gap:15px;
-margin-bottom:25px;
+margin:20px 0;
 }
 
 .card{
@@ -223,7 +251,7 @@ border:1px solid #00ff66;
 padding:10px 15px;
 border-radius:12px;
 box-shadow:0 0 15px rgba(0,255,100,0.3);
-min-width:150px;
+min-width:140px;
 text-align:center;
 }
 
@@ -232,9 +260,7 @@ margin:0;
 color:#d6ff00;
 }
 
-/* =========================
-   TABLE 3D
-========================= */
+/* ================= TABLE ================= */
 
 table{
 width:100%;
@@ -267,13 +293,11 @@ background:rgba(0,255,100,0.08);
 transition:0.2s;
 }
 
-/* TEAM */
 .team{
 color:white;
 font-weight:bold;
 }
 
-/* FRAGGER TITLE (SIN CAMBIOS VISUALES EXTRA) */
 h2{
 text-align:center;
 color:#d6ff00;
@@ -286,19 +310,25 @@ text-shadow:0 0 20px #d6ff00;
 <body>
 
 <h1>🏆 LIGA CBS LATAM</h1>
+
+<div class="stream-links">
+
+<a href="https://www.tiktok.com/@manyngg" target="_blank" class="btn tiktok">🎵 TikTok</a>
+<a href="https://www.twitch.tv/manyyn" target="_blank" class="btn twitch">🎮 Twitch</a>
+
+</div>
+
 <div class='live'>🔴 LIVE TOURNAMENT</div>
 
-<div class='cards'>
-<div class='card'><h3>TOP TEAM</h3>""" + str(top_team) + """</div>
-<div class='card'><h3>SCORE</h3>""" + str(top_score) + """</div>
-<div class='card'><h3>TOTAL KILLS</h3>""" + str(total_kills_global) + """</div>
-<div class='card'><h3>GAMES</h3>""" + str(len(allgames)) + """</div>
+<div class="cards">
+<div class="card"><h3>TOP TEAM</h3>""" + str(top_team) + """</div>
+<div class="card"><h3>SCORE</h3>""" + str(top_score) + """</div>
+<div class="card"><h3>TOTAL KILLS</h3>""" + str(total_kills_global) + """</div>
+<div class="card"><h3>GAMES</h3>""" + str(len(allgames)) + """</div>
 </div>
 """
 
-    # =========================
-    # TABLE RANKING
-    # =========================
+    # ================= TABLE =================
 
     html += "<table><tr><th>POS</th><th>TEAM</th>"
 
@@ -334,15 +364,12 @@ text-shadow:0 0 20px #d6ff00;
 
     html += "</table>"
 
-    # =========================
-    # FRAGGER (SIN CAMBIOS COMO PEDISTE)
-    # =========================
+    # ================= FRAGGER (SIN CAMBIOS) =================
 
     html += "<h2>🔥 FRAGGER TABLE</h2>"
     html += "<table><tr><th>PLAYER</th><th>TEAM</th><th>KILLS</th></tr>"
 
     for p, s in fraggers:
-
         html += f"<tr><td>{p}</td><td>{s['team']}</td><td>{s['kills']}</td></tr>"
 
     html += "</table></body></html>"
