@@ -115,7 +115,7 @@ def borrar():
 
 
 # =========================
-# WEB UI
+# WEB
 # =========================
 
 @app.route("/")
@@ -182,8 +182,7 @@ font-family:Arial;
 margin:20px;
 }
 
-/* ================= HEADER ================= */
-
+/* HEADER */
 h1{
 text-align:center;
 color:#00ff66;
@@ -204,8 +203,7 @@ margin-bottom:10px;
 50%{opacity:0.3;}
 }
 
-/* ================= STREAM BUTTONS ================= */
-
+/* STREAM BUTTONS */
 .stream-links{
 text-align:center;
 margin:10px 0;
@@ -219,25 +217,37 @@ padding:10px 18px;
 border-radius:10px;
 text-decoration:none;
 font-weight:bold;
-color:black;
+color:white;
 transition:0.2s;
 box-shadow:0 0 15px rgba(0,0,0,0.5);
+display:flex;
+align-items:center;
+gap:6px;
 }
 
 .btn:hover{
 transform:scale(1.08);
 }
 
+/* TikTok */
 .tiktok{
 background:linear-gradient(45deg,#00ff66,#00ffaa);
+color:black;
 }
 
+/* Twitch */
 .twitch{
 background:linear-gradient(45deg,#d6ff00,#aaff00);
+color:black;
 }
 
-/* ================= CARDS ================= */
+/* Discord */
+.discord{
+background:linear-gradient(45deg,#5865F2,#7289DA);
+color:white;
+}
 
+/* CARDS */
 .cards{
 display:flex;
 justify-content:center;
@@ -260,8 +270,7 @@ margin:0;
 color:#d6ff00;
 }
 
-/* ================= TABLE ================= */
-
+/* TABLE */
 table{
 width:100%;
 border-collapse:collapse;
@@ -313,8 +322,17 @@ text-shadow:0 0 20px #d6ff00;
 
 <div class="stream-links">
 
-<a href="https://www.tiktok.com/@manyngg" target="_blank" class="btn tiktok">🎵 TikTok</a>
-<a href="https://www.twitch.tv/manyyn" target="_blank" class="btn twitch">🎮 Twitch</a>
+<a href="https://www.tiktok.com/@manyngg" target="_blank" class="btn tiktok">
+🎵 TikTok
+</a>
+
+<a href="https://www.twitch.tv/manyyn" target="_blank" class="btn twitch">
+🎮 Twitch
+</a>
+
+<a href="https://discord.com" target="_blank" class="btn discord">
+💬 Discord
+</a>
 
 </div>
 
@@ -328,8 +346,7 @@ text-shadow:0 0 20px #d6ff00;
 </div>
 """
 
-    # ================= TABLE =================
-
+    # TABLE
     html += "<table><tr><th>POS</th><th>TEAM</th>"
 
     for g in allgames:
@@ -364,8 +381,7 @@ text-shadow:0 0 20px #d6ff00;
 
     html += "</table>"
 
-    # ================= FRAGGER (SIN CAMBIOS) =================
-
+    # FRAGGER
     html += "<h2>🔥 FRAGGER TABLE</h2>"
     html += "<table><tr><th>PLAYER</th><th>TEAM</th><th>KILLS</th></tr>"
 
@@ -379,3 +395,4 @@ text-shadow:0 0 20px #d6ff00;
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=10000)
+    
