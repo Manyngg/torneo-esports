@@ -175,25 +175,32 @@ def home():
 
 <style>
 
+/* =========================
+   BODY (HUESO)
+========================= */
+
 body{
-background:#0a0a0a;
-color:white;
+background:#f2eee6;
+color:#111;
 font-family:Arial;
 margin:20px;
 }
 
-/* HEADER */
+/* =========================
+   HEADER
+========================= */
+
 h1{
 text-align:center;
-color:#00ff66;
-text-shadow:0 0 25px #00ff66;
+color:#00aa55;
+text-shadow:0 2px 10px rgba(0,0,0,0.15);
 font-size:44px;
 margin-bottom:5px;
 }
 
 .live{
 text-align:center;
-color:red;
+color:#d60000;
 font-weight:bold;
 animation:blink 1s infinite;
 margin-bottom:10px;
@@ -203,7 +210,10 @@ margin-bottom:10px;
 50%{opacity:0.3;}
 }
 
-/* STREAM BUTTONS */
+/* =========================
+   STREAM BUTTONS
+========================= */
+
 .stream-links{
 text-align:center;
 margin:10px 0;
@@ -214,12 +224,12 @@ gap:15px;
 
 .btn{
 padding:10px 18px;
-border-radius:10px;
+border-radius:12px;
 text-decoration:none;
 font-weight:bold;
-color:white;
+color:black;
 transition:0.2s;
-box-shadow:0 0 15px rgba(0,0,0,0.5);
+box-shadow:0 6px 15px rgba(0,0,0,0.2);
 display:flex;
 align-items:center;
 gap:6px;
@@ -232,22 +242,17 @@ transform:scale(1.08);
 /* TikTok */
 .tiktok{
 background:linear-gradient(45deg,#00ff66,#00ffaa);
-color:black;
 }
 
 /* Twitch */
 .twitch{
 background:linear-gradient(45deg,#d6ff00,#aaff00);
-color:black;
 }
 
-/* Discord */
-.discord{
-background:linear-gradient(45deg,#5865F2,#7289DA);
-color:white;
-}
+/* =========================
+   CARDS
+========================= */
 
-/* CARDS */
 .cards{
 display:flex;
 justify-content:center;
@@ -256,13 +261,21 @@ margin:20px 0;
 }
 
 .card{
-background:#111;
-border:1px solid #00ff66;
-padding:10px 15px;
-border-radius:12px;
-box-shadow:0 0 15px rgba(0,255,100,0.3);
+background:#1e1e1e;
+color:white;
+border-radius:14px;
+padding:12px 18px;
 min-width:140px;
 text-align:center;
+box-shadow:
+0 6px 0 #111,
+0 12px 25px rgba(0,0,0,0.25);
+transform:translateY(0);
+transition:0.2s;
+}
+
+.card:hover{
+transform:translateY(-3px);
 }
 
 .card h3{
@@ -270,16 +283,23 @@ margin:0;
 color:#d6ff00;
 }
 
-/* TABLE */
+/* =========================
+   TABLAS 3D MODERNAS
+========================= */
+
 table{
 width:100%;
 border-collapse:collapse;
 margin-bottom:30px;
-background:linear-gradient(145deg,#111,#1a1a1a);
-border-radius:15px;
+background:linear-gradient(145deg,#1a1a1a,#2a2a2a);
+border-radius:16px;
 overflow:hidden;
-box-shadow:0 12px 30px rgba(0,0,0,0.6);
-transform:perspective(900px) rotateX(2deg);
+
+box-shadow:
+0 10px 0 #111,
+0 18px 35px rgba(0,0,0,0.35);
+
+transform:perspective(1000px) rotateX(2deg);
 }
 
 th{
@@ -288,17 +308,18 @@ color:black;
 font-weight:bold;
 padding:12px;
 text-transform:uppercase;
+letter-spacing:1px;
 }
 
 td{
 padding:10px;
 text-align:center;
-border-bottom:1px solid #222;
+border-bottom:1px solid #333;
 color:white;
 }
 
 tr:hover{
-background:rgba(0,255,100,0.08);
+background:rgba(0,255,100,0.12);
 transition:0.2s;
 }
 
@@ -307,10 +328,11 @@ color:white;
 font-weight:bold;
 }
 
+/* TITULOS */
 h2{
 text-align:center;
-color:#d6ff00;
-text-shadow:0 0 20px #d6ff00;
+color:#b59a00;
+text-shadow:0 2px 10px rgba(0,0,0,0.2);
 }
 
 </style>
@@ -330,10 +352,6 @@ text-shadow:0 0 20px #d6ff00;
 🎮 Twitch
 </a>
 
-<a href="https://discord.com" target="_blank" class="btn discord">
-💬 Discord
-</a>
-
 </div>
 
 <div class='live'>🔴 LIVE TOURNAMENT</div>
@@ -346,7 +364,10 @@ text-shadow:0 0 20px #d6ff00;
 </div>
 """
 
-    # TABLE
+    # =========================
+    # TABLE RANKING
+    # =========================
+
     html += "<table><tr><th>POS</th><th>TEAM</th>"
 
     for g in allgames:
@@ -381,7 +402,10 @@ text-shadow:0 0 20px #d6ff00;
 
     html += "</table>"
 
+    # =========================
     # FRAGGER
+    # =========================
+
     html += "<h2>🔥 FRAGGER TABLE</h2>"
     html += "<table><tr><th>PLAYER</th><th>TEAM</th><th>KILLS</th></tr>"
 
@@ -395,4 +419,3 @@ text-shadow:0 0 20px #d6ff00;
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=10000)
-    
