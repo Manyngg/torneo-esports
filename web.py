@@ -6,8 +6,9 @@ app = Flask(__name__)
 
 DB = "data.json"
 
+
 # =========================
-# DB LOAD / SAVE SEGURO
+# DB SAFE LOAD / SAVE
 # =========================
 
 def load():
@@ -15,11 +16,15 @@ def load():
         return {"equipos": {}}
 
     with open(DB, "r", encoding="utf8") as f:
-        return json.load(f)
+        try:
+            return json.load(f)
+        except:
+            return {"equipos": {}}
 
 
 def save(data):
     tmp = DB + ".tmp"
+
     with open(tmp, "w", encoding="utf8") as f:
         json.dump(data, f, indent=4, ensure_ascii=False)
 
@@ -85,9 +90,9 @@ def report():
     for i, p in enumerate(players):
 
         if p not in db["equipos"][team]["players"]:
-            db["equipos"][team]["players"][p] = {"kills": 0}
+            db["equipos"][team]["players"][p] = 0
 
-        db["equipos"][team]["players"][p]["kills"] += kills[i]
+        db["equipos"][team]["players"][p] += kills[i]
 
     save(db)
 
@@ -116,10 +121,14 @@ def modificar():
 
     old = db["equipos"][team]["games"][game]
 
-    # RESTAR kills antiguas
+    # quitar kills antiguas
     for p, k in old["players"].items():
+
+        if isinstance(k, dict):
+            k = k.get("kills", 0)
+
         if p in db["equipos"][team]["players"]:
-            db["equipos"][team]["players"][p]["kills"] -= k
+            db["equipos"][team]["players"][p] -= k
 
     placement = int(body["placement"])
     players = body["jugadores"]
@@ -140,9 +149,9 @@ def modificar():
     for i, p in enumerate(players):
 
         if p not in db["equipos"][team]["players"]:
-            db["equipos"][team]["players"][p] = {"kills": 0}
+            db["equipos"][team]["players"][p] = 0
 
-        db["equipos"][team]["players"][p]["kills"] += kills[i]
+        db["equipos"][team]["players"][p] += kills[i]
 
     save(db)
 
@@ -150,7 +159,7 @@ def modificar():
 
 
 # =========================
-# HOME DASHBOARD
+# DASHBOARD WEB
 # =========================
 
 @app.route("/")
@@ -192,7 +201,7 @@ def home():
     ranking.sort(key=lambda x: x["score"], reverse=True)
 
     # =========================
-    # FRAGGER GLOBAL (FIXED)
+    # FRAGGER GLOBAL (SAFE)
     # =========================
 
     fragger = {}
@@ -202,12 +211,9 @@ def home():
         for p, k in data["players"].items():
 
             if p not in fragger:
-                fragger[p] = {
-                    "team": team,
-                    "kills": 0
-                }
+                fragger[p] = {"team": team, "kills": 0}
 
-            fragger[p]["kills"] += k   # ✅ FIX REAL
+            fragger[p]["kills"] += k
 
     fraggers = sorted(
         fragger.items(),
@@ -216,10 +222,8 @@ def home():
     )
 
     # =========================
-    # HTML
+    # HTML SAFE
     # =========================
-
-    colors = ["#00ff66", "#d6ff00", "#00ffaa", "#aaff00", "#66ff00", "#ffe600"]
 
     html = """
 <html>
@@ -272,6 +276,11 @@ line-height:1.5;
 <th>TEAM</th>
 """
 
+    # =========================
+    # HEADER GAMES
+    # =========================
+
+    colors = ["#00ff66", "#d6ff00", "#00ffaa", "#aaff00", "#66ff00", "#ffe600"]
     idx = 0
 
     for g in allgames:
@@ -280,9 +289,7 @@ line-height:1.5;
         idx += 1
 
         html += f"""
-<th style='background:{color};color:black'>
-GAME {g}<br>PLAYERS
-</th>
+<th style='background:{color};color:black'>GAME {g}<br>PLAYERS</th>
 <th style='background:{color};color:black'>POS</th>
 <th style='background:{color};color:black'>SCORE</th>
 """
@@ -292,6 +299,10 @@ GAME {g}<br>PLAYERS
 <th>TOTAL KILLS</th>
 </tr>
 """
+
+    # =========================
+    # ROWS
+    # =========================
 
     pos = 1
 
@@ -318,7 +329,12 @@ GAME {g}<br>PLAYERS
                 game = r["games"][g]
 
                 players_txt = ""
+
                 for p, k in game["players"].items():
+
+                    if isinstance(k, dict):
+                        k = k.get("kills", 0)
+
                     players_txt += f"{p}:{k}<br>"
 
                 html += f"""
@@ -371,13 +387,14 @@ GAME {g}<br>PLAYERS
 
 
 # =========================
-# API PARA BOT DISCORD
+# API PARA DISCORD
 # =========================
 
 @app.route("/api/leaderboard")
 def api_leaderboard():
 
     db = load()
+
     result = []
 
     for team, data in db["equipos"].items():
@@ -404,6 +421,7 @@ def api_leaderboard():
 def api_fragger():
 
     db = load()
+
     fragger = {}
 
     for team, data in db["equipos"].items():
