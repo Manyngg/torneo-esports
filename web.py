@@ -130,20 +130,13 @@ def home():
 
     total_kills_global = 0
 
-    # =========================
-    # DETECTAR POS REPETIDAS
-    # =========================
-
+    # duplicados
     posiciones_por_game = {}
 
     for team, data in equipos.items():
         for g, info in data["games"].items():
-
             pos = info["placement"]
-
-            if g not in posiciones_por_game:
-                posiciones_por_game[g] = {}
-
+            posiciones_por_game.setdefault(g, {})
             posiciones_por_game[g].setdefault(pos, 0)
             posiciones_por_game[g][pos] += 1
 
@@ -165,9 +158,6 @@ def home():
         })
 
     ranking.sort(key=lambda x: x["score"], reverse=True)
-
-    top_team = ranking[0]["team"] if ranking else "-"
-    top_score = ranking[0]["score"] if ranking else 0
 
     fragger = {}
 
@@ -205,10 +195,9 @@ text-align:center;
 color:#00aa55;
 text-shadow:0 2px 10px rgba(0,0,0,0.15);
 font-size:44px;
-margin-bottom:5px;
 }
 
-/* STREAM */
+/* STREAM LINKS (RESTAURADOS) */
 .stream-links{
 text-align:center;
 margin:10px 0;
@@ -224,25 +213,12 @@ text-decoration:none;
 font-weight:bold;
 color:black;
 box-shadow:0 6px 15px rgba(0,0,0,0.2);
-display:flex;
-align-items:center;
-gap:6px;
 }
 
 .tiktok{background:linear-gradient(45deg,#00ff66,#00ffaa);}
 .twitch{background:linear-gradient(45deg,#d6ff00,#aaff00);}
 
 .btn:hover{transform:scale(1.08);}
-
-/* LIVE */
-.live{
-text-align:center;
-color:#d60000;
-font-weight:bold;
-animation:blink 1s infinite;
-}
-
-@keyframes blink{50%{opacity:0.3;}}
 
 /* CARDS */
 .cards{
@@ -262,8 +238,7 @@ text-align:center;
 box-shadow:0 6px 0 #111, 0 12px 25px rgba(0,0,0,0.25);
 }
 
-/* TABLAS (GRIS CLARO + 3D MODERNO) */
-
+/* TABLAS 3D */
 table{
 width:100%;
 border-collapse:collapse;
@@ -271,11 +246,7 @@ margin-bottom:30px;
 background:#e6e6e6;
 border-radius:16px;
 overflow:hidden;
-
-box-shadow:
-0 10px 0 #bdbdbd,
-0 18px 35px rgba(0,0,0,0.25);
-
+box-shadow:0 10px 0 #bdbdbd, 0 18px 35px rgba(0,0,0,0.25);
 transform:perspective(1000px) rotateX(2deg);
 }
 
@@ -293,18 +264,13 @@ border-bottom:1px solid #cfcfcf;
 color:#111;
 }
 
-tr:hover{
-background:rgba(0,255,100,0.15);
-}
-
 /* DUPLICADOS */
 .duplicate-pos{
 color:red !important;
 font-weight:bold;
-text-shadow:0 0 8px rgba(255,0,0,0.5);
 }
 
-/* TITULOS */
+/* TITULO FRAGGER */
 h2{
 text-align:center;
 color:#b59a00;
@@ -317,17 +283,22 @@ color:#b59a00;
 
 <h1>🏆 LIGA CBS LATAM</h1>
 
-<div class='live'>🔴 LIVE TOURNAMENT</div>
+<div class="stream-links">
+
+<a href="https://www.tiktok.com/@manyngg" target="_blank" class="btn tiktok">🎵 TikTok</a>
+<a href="https://www.twitch.tv/manyyn" target="_blank" class="btn twitch">🎮 Twitch</a>
+
+</div>
 
 <div class="cards">
-<div class="card">TOP TEAM<br>""" + str(top_team) + """</div>
-<div class="card">SCORE<br>""" + str(top_score) + """</div>
-<div class="card">KILLS<br>""" + str(total_kills_global) + """</div>
-<div class="card">GAMES<br>""" + str(len(allgames)) + """</div>
+<div class="card">TOURNAMENT</div>
 </div>
 """
 
-    # TABLE
+    # =========================
+    # TABLES
+    # =========================
+
     html += "<table><tr><th>POS</th><th>TEAM</th>"
 
     for g in allgames:
@@ -366,12 +337,22 @@ color:#b59a00;
 
     html += "</table>"
 
-    # FRAGGER
+    # =========================
+    # FRAGGER (CON POS + MEDALLAS RESTAURADO)
+    # =========================
+
     html += "<h2>🔥 FRAGGER TABLE</h2>"
-    html += "<table><tr><th>PLAYER</th><th>TEAM</th><th>KILLS</th></tr>"
+    html += "<table><tr><th>POS</th><th>PLAYER</th><th>TEAM</th><th>KILLS</th></tr>"
+
+    ppos = 1
 
     for p, s in fraggers:
-        html += f"<tr><td>{p}</td><td>{s['team']}</td><td>{s['kills']}</td></tr>"
+
+        medal = "🥇" if ppos == 1 else "🥈" if ppos == 2 else "🥉" if ppos == 3 else ""
+
+        html += f"<tr><td>{medal} {ppos}</td><td>{p}</td><td>{s['team']}</td><td>{s['kills']}</td></tr>"
+
+        ppos += 1
 
     html += "</table></body></html>"
 
