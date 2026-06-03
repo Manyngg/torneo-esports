@@ -8,27 +8,22 @@ DB = "data.json"
 
 
 # =========================
-# DB SAFE
+# DB
 # =========================
 
 def load():
+
     if not os.path.exists(DB):
         return {"equipos": {}}
 
     with open(DB, "r", encoding="utf8") as f:
-        try:
-            return json.load(f)
-        except:
-            return {"equipos": {}}
+        return json.load(f)
 
 
 def save(data):
-    tmp = DB + ".tmp"
 
-    with open(tmp, "w", encoding="utf8") as f:
+    with open(DB, "w", encoding="utf8") as f:
         json.dump(data, f, indent=4, ensure_ascii=False)
-
-    os.replace(tmp, DB)
 
 
 # =========================
@@ -58,10 +53,11 @@ def report():
 
     body = request.json
 
-    team = body["equipo"]
+    team = body["equipo"].strip()
     game = str(body["game"])
     placement = int(body["placement"])
-    players = body["jugadores"]
+
+    players = [p.strip() for p in body["jugadores"]]
     kills = body["kills"]
 
     db = load()
@@ -79,7 +75,10 @@ def report():
         "placement": placement,
         "kills": teamkills,
         "score": score,
-        "players": {players[i]: kills[i] for i in range(len(players))}
+        "players": {
+            players[i].strip(): int(kills[i])
+            for i in range(len(players))
+        }
     }
 
     save(db)
@@ -88,7 +87,7 @@ def report():
 
 
 # =========================
-# MODIFY (REEMPLAZO TOTAL)
+# MODIFY
 # =========================
 
 @app.route("/modificar", methods=["POST"])
@@ -96,10 +95,11 @@ def modificar():
 
     body = request.json
 
-    team = body["equipo"]
+    team = body["equipo"].strip()
     game = str(body["game"])
     placement = int(body["placement"])
-    players = body["jugadores"]
+
+    players = [p.strip() for p in body["jugadores"]]
     kills = body["kills"]
 
     db = load()
@@ -117,7 +117,10 @@ def modificar():
         "placement": placement,
         "kills": teamkills,
         "score": score,
-        "players": {players[i]: kills[i] for i in range(len(players))}
+        "players": {
+            players[i].strip(): int(kills[i])
+            for i in range(len(players))
+        }
     }
 
     save(db)
@@ -126,7 +129,7 @@ def modificar():
 
 
 # =========================
-# HOME (UI RESTAURADA + 3D)
+# WEB
 # =========================
 
 @app.route("/")
@@ -168,7 +171,7 @@ def home():
     ranking.sort(key=lambda x: x["score"], reverse=True)
 
     # =========================
-    # FRAGGER (FIX FINAL)
+    # FRAGGER
     # =========================
 
     fragger = {}
@@ -188,7 +191,7 @@ def home():
     )
 
     # =========================
-    # HTML (TU ESTILO RESTAURADO)
+    # HTML
     # =========================
 
     html = """
@@ -199,7 +202,7 @@ def home():
 <style>
 
 body{
-background: radial-gradient(circle at top, #0f0f0f, #050505);
+background:#0a0a0a;
 color:white;
 font-family:Arial;
 margin:20px;
@@ -208,50 +211,21 @@ margin:20px;
 h1{
 text-align:center;
 color:#b6ff00;
-text-shadow:0 0 25px #00ff66, 0 0 40px #b6ff00;
-font-size:42px;
+text-shadow:0 0 20px #00ff66;
 }
 
-/* LINKS */
-.links{
-text-align:center;
-margin:15px 0;
-}
-
-.links a{
-color:#00ff66;
-text-decoration:none;
-margin:0 12px;
-padding:10px 18px;
-border:2px solid #00ff66;
-border-radius:12px;
-box-shadow:0 0 20px #00ff66;
-transition:0.3s;
-font-weight:bold;
-}
-
-.links a:hover{
-background:#00ff66;
-color:black;
-box-shadow:0 0 30px #b6ff00;
-}
-
-/* TABLE 3D */
 table{
 width:100%;
 border-collapse:collapse;
 margin-bottom:30px;
-background: rgba(20,20,20,0.7);
-box-shadow:0 15px 50px rgba(0,255,100,0.25);
-border-radius:15px;
-overflow:hidden;
-transform: perspective(900px) rotateX(2deg);
+background:#111;
+box-shadow:0 0 25px rgba(0,255,100,0.2);
 }
 
 th,td{
 padding:10px;
 text-align:center;
-border:1px solid rgba(255,255,255,0.05);
+border:1px solid #222;
 }
 
 .team{
@@ -265,14 +239,16 @@ font-size:12px;
 line-height:1.5;
 }
 
+/* EVITA DOBLES :: VISUALMENTE */
+.players br{
+display:block;
+margin:2px 0;
+}
+
 h2{
 text-align:center;
 color:#b6ff00;
 text-shadow:0 0 20px #b6ff00;
-}
-
-tr:hover{
-background:rgba(0,255,102,0.08);
 }
 
 </style>
@@ -283,30 +259,18 @@ background:rgba(0,255,102,0.08);
 
 <h1>🏆 LIGA CBS</h1>
 
-<div class="links">
-<a href="https://www.tiktok.com/@manyngg" target="_blank">🎵 TikTok</a>
-<a href="https://www.twitch.tv/manyyn" target="_blank">🎮 Twitch</a>
-</div>
-
 <table>
 <tr>
 <th>POS</th>
 <th>TEAM</th>
 """
 
-    colors = ["#00ff66", "#b6ff00", "#00ffaa", "#aaff00", "#66ff33", "#d4ff00"]
-
-    idx = 0
-
     for g in allgames:
 
-        color = colors[idx % len(colors)]
-        idx += 1
-
         html += f"""
-<th style='background:{color};color:black'>GAME {g}<br>PLAYERS</th>
-<th style='background:{color};color:black'>POS</th>
-<th style='background:{color};color:black'>SCORE</th>
+<th>GAME {g}<br>PLAYERS</th>
+<th>POS</th>
+<th>SCORE</th>
 """
 
     html += """
@@ -336,7 +300,7 @@ background:rgba(0,255,102,0.08);
                 players_txt = ""
 
                 for p, k in game["players"].items():
-                    players_txt += f"{p}:{k}<br>"
+                    players_txt += f"{p.strip()} : {k}<br>"
 
                 html += f"""
 <td class='players'>{players_txt}</td>
@@ -371,7 +335,7 @@ background:rgba(0,255,102,0.08);
 
         html += f"""
 <tr>
-<td>{p}</td>
+<td>{p.strip()}</td>
 <td>{s['team']}</td>
 <td>{s['kills']}</td>
 </tr>
@@ -388,4 +352,4 @@ background:rgba(0,255,102,0.08);
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=10000)
+    app.run(host="0.0.0.0", port=10000, debug=True)
