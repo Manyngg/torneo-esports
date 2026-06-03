@@ -44,14 +44,12 @@ def report():
     try:
         body = request.json
 
-        team = str(body.get("equipo", "")).strip()
-        game = str(body.get("game", "")).strip()
-        placement = int(body.get("placement", 0))
+        team = str(body["equipo"]).strip()
+        game = str(body["game"]).strip()
+        placement = int(body["placement"])
 
-        players = body.get("jugadores", [])
-        kills = body.get("kills", [])
-
-        kills = [int(k) for k in kills]
+        players = body["jugadores"]
+        kills = [int(k) for k in body["kills"]]
 
         db = load()
 
@@ -84,12 +82,12 @@ def modificar():
     try:
         body = request.json
 
-        team = str(body.get("equipo", "")).strip()
-        game = str(body.get("game", "")).strip()
-        placement = int(body.get("placement", 0))
+        team = str(body["equipo"]).strip()
+        game = str(body["game"]).strip()
+        placement = int(body["placement"])
 
-        players = body.get("jugadores", [])
-        kills = [int(k) for k in body.get("kills", [])]
+        players = body["jugadores"]
+        kills = [int(k) for k in body["kills"]]
 
         db = load()
 
@@ -123,7 +121,7 @@ def borrar():
 
 
 # =========================
-# WEB FINAL (CON LINKS RESTAURADOS)
+# WEB
 # =========================
 
 @app.route("/")
@@ -164,9 +162,13 @@ def home():
 
     fraggers = sorted(fragger.items(), key=lambda x: x[1]["kills"], reverse=True)
 
-    # =========================
-    # HTML
-    # =========================
+    game_colors = [
+        "#00ff66",
+        "#d6ff00",
+        "#00ffaa",
+        "#aaff00",
+        "#66ff00"
+    ]
 
     html = """
 <html>
@@ -190,7 +192,6 @@ font-size:38px;
 margin-bottom:10px;
 }
 
-/* LINKS RESTAURADOS */
 .links{
 display:flex;
 justify-content:center;
@@ -207,12 +208,6 @@ border-radius:12px;
 background:#111;
 border:1px solid #00ff66;
 box-shadow:0 0 15px rgba(0,255,100,0.3);
-transition:0.3s;
-}
-
-.link-box:hover{
-transform:scale(1.05);
-box-shadow:0 0 25px #00ff66;
 }
 
 .link-box img{
@@ -226,7 +221,6 @@ text-decoration:none;
 font-weight:bold;
 }
 
-/* TABLAS */
 table{
 width:100%;
 border-collapse:collapse;
@@ -238,8 +232,7 @@ overflow:hidden;
 }
 
 th{
-background:#00ff66;
-color:#000;
+color:black;
 padding:12px;
 font-size:14px;
 }
@@ -261,10 +254,6 @@ color:#d6ff00;
 text-shadow:0 0 20px #d6ff00;
 }
 
-/* LINKS */
-"""
-
-    html += """
 </style>
 
 </head>
@@ -277,12 +266,12 @@ text-shadow:0 0 20px #d6ff00;
 
 <div class="link-box">
 <img src="https://cdn-icons-png.flaticon.com/512/3046/3046120.png">
-<a href="https://www.tiktok.com/@manyngg" target="_blank">TikTok</a>
+<a href="https://www.tiktok.com/@manyngg" target="_blank">🎵 TikTok</a>
 </div>
 
 <div class="link-box">
 <img src="https://cdn-icons-png.flaticon.com/512/5968/5968819.png">
-<a href="https://www.twitch.tv/manyyn" target="_blank">Twitch</a>
+<a href="https://www.twitch.tv/manyyn" target="_blank">🎮 Twitch</a>
 </div>
 
 </div>
@@ -295,7 +284,10 @@ text-shadow:0 0 20px #d6ff00;
     html += "<table><tr><th>POS</th><th>TEAM</th>"
 
     for g in allgames:
-        html += "<th>GAME</th><th>POS</th><th>SCORE</th>"
+
+        color = game_colors[int(g) % len(game_colors)] if str(g).isdigit() else "#00ff66"
+
+        html += f"<th style='background:{color}'>GAME {g}</th><th style='background:{color}'>POS</th><th style='background:{color}'>SCORE</th>"
 
     html += "<th>TOTAL</th><th>KILLS</th></tr>"
 
@@ -314,7 +306,7 @@ text-shadow:0 0 20px #d6ff00;
 
                 players_txt = ""
                 for p, k in game["players"].items():
-                    players_txt += f"{p}:{k}<br>"
+                    players_txt += f"{p}: {k}<br>"
 
                 html += f"<td>{players_txt}</td><td>{game['placement']}</td><td>{game['score']}</td>"
             else:
