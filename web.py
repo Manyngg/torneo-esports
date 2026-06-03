@@ -7,6 +7,10 @@ app = Flask(__name__)
 DB = "data.json"
 
 
+# =========================
+# DB
+# =========================
+
 def load():
     if not os.path.exists(DB):
         return {"equipos": {}}
@@ -37,6 +41,10 @@ def calcular_score(placement, kills):
 
     return round(kills * mult, 2)
 
+
+# =========================
+# REPORT
+# =========================
 
 @app.route("/report", methods=["POST"])
 def report():
@@ -70,7 +78,11 @@ def report():
     return jsonify({"ok": True})
 
 
-@app.route("/modificar", methods=["POST"])
+# =========================
+# MODIFY
+# =========================
+
+@app.route("/modificar")
 def modificar():
 
     body = request.json
@@ -98,6 +110,10 @@ def modificar():
 
     return jsonify({"ok": True})
 
+
+# =========================
+# WEB
+# =========================
 
 @app.route("/")
 def home():
@@ -134,19 +150,15 @@ def home():
         for g, info in data["games"].items():
 
             for p, k in info["players"].items():
-
                 p = clean(p)
-
                 fragger[p] = fragger.get(p, {"team": team, "kills": 0})
                 fragger[p]["kills"] += k
 
-    fraggers = sorted(
-        fragger.items(),
-        key=lambda x: x[1]["kills"],
-        reverse=True
-    )
+    fraggers = sorted(fragger.items(), key=lambda x: x[1]["kills"], reverse=True)
 
-    colors = ["#00ff66", "#d6ff00", "#00ffaa", "#aaff00", "#66ff00"]
+    # =========================
+    # HTML
+    # =========================
 
     html = """
 <html>
@@ -162,49 +174,86 @@ font-family:Arial;
 margin:20px;
 }
 
+/* TITULO */
 h1{
 text-align:center;
-color:#b6ff00;
+color:#00ff66;
 text-shadow:0 0 25px #00ff66;
+font-size:38px;
+margin-bottom:5px;
 }
 
+/* LINKS */
+.links{
+text-align:center;
+margin-bottom:20px;
+}
+
+.links a{
+color:#fff;
+margin:0 15px;
+text-decoration:none;
+font-weight:bold;
+}
+
+.links a:hover{
+color:#00ff66;
+text-shadow:0 0 10px #00ff66;
+}
+
+/* TABLA PRINCIPAL */
 table{
 width:100%;
 border-collapse:collapse;
 margin-bottom:30px;
-background:#111;
+background:linear-gradient(145deg,#0f0f0f,#151515);
 box-shadow:0 10px 40px rgba(0,255,100,0.25);
-border-radius:10px;
+border-radius:12px;
 overflow:hidden;
 }
 
-th,td{
+/* HEADERS */
+th{
+background:#00ff66;
+color:#000;
+padding:12px;
+font-size:14px;
+text-transform:uppercase;
+letter-spacing:1px;
+}
+
+/* CELDAS */
+td{
 padding:10px;
 text-align:center;
-border:1px solid #222;
+border-bottom:1px solid #222;
 }
 
+/* EQUIPOS EN BLANCO */
 .team{
-color:#00ff66;
+color:white;
 font-weight:bold;
-text-shadow:0 0 10px #00ff66;
+text-shadow:0 0 10px rgba(255,255,255,0.2);
 }
 
+/* PLAYERS */
 .players{
 font-size:12px;
 line-height:1.5;
+color:#ccc;
 }
 
+/* EFECTO 3D */
+table:hover{
+transform:scale(1.01);
+transition:0.3s;
+}
+
+/* FRAGGER */
 h2{
 text-align:center;
 color:#d6ff00;
 text-shadow:0 0 20px #d6ff00;
-}
-
-/* 3D efecto */
-table:hover{
-transform:scale(1.01);
-transition:0.3s;
 }
 
 </style>
@@ -214,6 +263,11 @@ transition:0.3s;
 <body>
 
 <h1>🏆 LIGA CBS</h1>
+
+<div class="links">
+<a href="https://www.tiktok.com/@manyngg" target="_blank">TikTok</a>
+<a href="https://www.twitch.tv/manyyn" target="_blank">Twitch</a>
+</div>
 """
 
     # =========================
@@ -257,7 +311,7 @@ transition:0.3s;
     html += "</table>"
 
     # =========================
-    # FRAGGER CON POSICIONES
+    # FRAGGER
     # =========================
 
     html += "<h2>🔥 FRAGGER TABLE</h2>"
