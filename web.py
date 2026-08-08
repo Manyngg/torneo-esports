@@ -1,279 +1,10 @@
 from flask import Flask, request, jsonify
 import json
 import os
-import io
-
-from google.oauth2 import service_account
-from googleapiclient.discovery import build
-from googleapiclient.http import MediaIoBaseUpload, MediaIoBaseDownload
-
 
 app = Flask(__name__)
 
 DB = "data.json"
-
-
-# ============================================================
-# GOOGLE DRIVE
-# ============================================================
-
-GOOGLE_CREDENTIALS = os.environ.get("GOOGLE_CREDENTIALS")
-
-DRIVE_FOLDER_NAME = "TORNEOS MANYN"
-DRIVE_FILE_NAME = "data.json"
-
-SCOPES = [
-    "https://www.googleapis.com/auth/drive"
-]
-
-
-def get_drive_service():
-
-    if not GOOGLE_CREDENTIALS:
-        print("ERROR: No existe GOOGLE_CREDENTIALS en Render.")
-        return None
-
-    try:
-
-        credentials_info = json.loads(GOOGLE_CREDENTIALS)
-
-        credentials = service_account.Credentials.from_service_account_info(
-            credentials_info,
-            scopes=SCOPES
-        )
-
-        service = build(
-            "drive",
-            "v3",
-            credentials=credentials,
-            cache_discovery=False
-        )
-
-        return service
-
-    except Exception as e:
-
-        print("ERROR conectando con Google Drive:")
-        print(e)
-
-        return None
-
-
-def find_drive_folder():
-
-    service = get_drive_service()
-
-    if service is None:
-        return None
-
-    try:
-
-        query = (
-            "name = '" + DRIVE_FOLDER_NAME + "' "
-            "and mimeType = 'application/vnd.google-apps.folder' "
-            "and trashed = false"
-        )
-
-        results = service.files().list(
-            q=query,
-            spaces="drive",
-            fields="files(id, name)",
-            pageSize=100
-        ).execute()
-
-        folders = results.get("files", [])
-
-        if not folders:
-
-            print("No existe todavía la carpeta TORNEOS MANYN.")
-
-            return None
-
-        folder_id = folders[0]["id"]
-
-        print("Carpeta Google Drive encontrada:")
-        print(DRIVE_FOLDER_NAME)
-        print("ID:", folder_id)
-
-        return folder_id
-
-    except Exception as e:
-
-        print("ERROR buscando carpeta de Google Drive:")
-        print(e)
-
-        return None
-
-
-def find_drive_backup():
-
-    service = get_drive_service()
-
-    if service is None:
-        return None
-
-    folder_id = find_drive_folder()
-
-    if folder_id is None:
-        return None
-
-    try:
-
-        query = (
-            "'" + folder_id + "' in parents "
-            "and name = '" + DRIVE_FILE_NAME + "' "
-            "and trashed = false"
-        )
-
-        results = service.files().list(
-            q=query,
-            spaces="drive",
-            fields="files(id, name, modifiedTime)",
-            orderBy="modifiedTime desc",
-            pageSize=10
-        ).execute()
-
-        files = results.get("files", [])
-
-        if not files:
-            return None
-
-        return files[0]["id"]
-
-    except Exception as e:
-
-        print("ERROR buscando respaldo:")
-
-        print(e)
-
-        return None
-
-
-def restore_from_drive():
-
-    service = get_drive_service()
-
-    if service is None:
-        return False
-
-    file_id = find_drive_backup()
-
-    if file_id is None:
-
-        print("No existe todavía un respaldo en Google Drive.")
-
-        return False
-
-    try:
-
-        request_drive = service.files().get_media(
-            fileId=file_id
-        )
-
-        fh = io.BytesIO()
-
-        downloader = MediaIoBaseDownload(
-            fh,
-            request_drive
-        )
-
-        done = False
-
-        while not done:
-
-            status, done = downloader.next_chunk()
-
-        fh.seek(0)
-
-        content = fh.read().decode("utf-8")
-
-        data = json.loads(content)
-
-        with open(DB, "w", encoding="utf8") as f:
-
-            json.dump(
-                data,
-                f,
-                indent=4,
-                ensure_ascii=False
-            )
-
-        print("RESPALDO RESTAURADO DESDE GOOGLE DRIVE")
-
-        return True
-
-    except Exception as e:
-
-        print("ERROR restaurando respaldo:")
-
-        print(e)
-
-        return False
-
-
-def backup_to_drive():
-
-    service = get_drive_service()
-
-    if service is None:
-
-        print("No se pudo conectar con Google Drive.")
-
-        return False
-
-    folder_id = find_drive_folder()
-
-    if folder_id is None:
-
-        return False
-
-    try:
-
-        with open(DB, "rb") as f:
-
-            file_content = f.read()
-
-        media = MediaIoBaseUpload(
-            io.BytesIO(file_content),
-            mimetype="application/json",
-            resumable=False
-        )
-
-        existing_file_id = find_drive_backup()
-
-        if existing_file_id:
-
-            service.files().update(
-                fileId=existing_file_id,
-                media_body=media
-            ).execute()
-
-            print("Respaldo actualizado en Google Drive.")
-
-        else:
-
-            file_metadata = {
-                "name": DRIVE_FILE_NAME,
-                "parents": [folder_id]
-            }
-
-            service.files().create(
-                body=file_metadata,
-                media_body=media,
-                fields="id"
-            ).execute()
-
-            print("Primer respaldo creado en Google Drive.")
-
-        return True
-
-    except Exception as e:
-
-        print("ERROR creando respaldo:")
-
-        print(e)
-
-        return False
 
 
 # ============================================================
@@ -284,23 +15,7 @@ def load():
 
     if not os.path.exists(DB):
 
-        print("data.json no existe localmente.")
-
-        print("Buscando respaldo en Google Drive...")
-
-        if restore_from_drive():
-
-            try:
-
-                with open(DB, "r", encoding="utf8") as f:
-
-                    return json.load(f)
-
-            except Exception:
-
-                return {
-                    "equipos": {}
-                }
+        print("data.json no existe. Creando base nueva.")
 
         return {
             "equipos": {}
@@ -319,7 +34,6 @@ def load():
     except Exception as e:
 
         print("ERROR leyendo data.json:")
-
         print(e)
 
         return {
@@ -349,7 +63,7 @@ def save(data):
         DB
     )
 
-    backup_to_drive()
+    print("Base de datos guardada correctamente.")
 
 
 # ============================================================
@@ -393,80 +107,97 @@ def calcular_score(
 )
 def report():
 
-    body = request.json
+    try:
 
-    team = str(
-        body.get(
-            "equipo",
-            ""
-        )
-    ).strip()
+        body = request.json
 
-    game = str(
-        body.get(
-            "game",
-            ""
-        )
-    ).strip()
-
-    placement = int(
-        body.get(
-            "placement",
-            0
-        )
-    )
-
-    players = body.get(
-        "jugadores",
-        []
-    )
-
-    kills = body.get(
-        "kills",
-        []
-    )
-
-    db = load()
-
-    if team not in db["equipos"]:
-
-        db["equipos"][team] = {
-            "games": {}
-        }
-
-    db["equipos"][team]["games"][game] = {
-
-        "placement": placement,
-
-        "kills": sum(kills),
-
-        "score": calcular_score(
-            placement,
-            sum(kills)
-        ),
-
-        "players": {
-
-            players[i]: int(
-                kills[i]
+        team = str(
+            body.get(
+                "equipo",
+                ""
             )
+        ).strip()
 
-            for i in range(
-                min(
-                    len(players),
-                    len(kills)
+        game = str(
+            body.get(
+                "game",
+                ""
+            )
+        ).strip()
+
+        placement = int(
+            body.get(
+                "placement",
+                0
+            )
+        )
+
+        players = body.get(
+            "jugadores",
+            []
+        )
+
+        kills = body.get(
+            "kills",
+            []
+        )
+
+        db = load()
+
+        if team not in db["equipos"]:
+
+            db["equipos"][team] = {
+                "games": {}
+            }
+
+        total_kills = sum(
+            int(k)
+            for k in kills
+        )
+
+        db["equipos"][team]["games"][game] = {
+
+            "placement": placement,
+
+            "kills": total_kills,
+
+            "score": calcular_score(
+                placement,
+                total_kills
+            ),
+
+            "players": {
+
+                players[i]: int(
+                    kills[i]
                 )
-            )
+
+                for i in range(
+                    min(
+                        len(players),
+                        len(kills)
+                    )
+                )
+
+            }
 
         }
 
-    }
+        save(db)
 
-    save(db)
+        return jsonify({
+            "ok": True
+        })
 
-    return jsonify({
-        "ok": True
-    })
+    except Exception as e:
+
+        print("ERROR en /report:")
+        print(e)
+
+        return jsonify({
+            "ok": False,
+            "error": str(e)
+        }), 400
 
 
 # ============================================================
@@ -479,86 +210,103 @@ def report():
 )
 def modificar():
 
-    body = request.json
+    try:
 
-    team = str(
-        body.get(
-            "equipo",
-            ""
-        )
-    ).strip()
+        body = request.json
 
-    game = str(
-        body.get(
-            "game",
-            ""
-        )
-    ).strip()
-
-    placement = int(
-        body.get(
-            "placement",
-            0
-        )
-    )
-
-    players = body.get(
-        "jugadores",
-        []
-    )
-
-    kills = body.get(
-        "kills",
-        []
-    )
-
-    db = load()
-
-    if team not in db["equipos"]:
-
-        return jsonify({
-            "error": "equipo no existe"
-        }), 400
-
-    if game not in db["equipos"][team]["games"]:
-
-        return jsonify({
-            "error": "partida no existe"
-        }), 400
-
-    db["equipos"][team]["games"][game] = {
-
-        "placement": placement,
-
-        "kills": sum(kills),
-
-        "score": calcular_score(
-            placement,
-            sum(kills)
-        ),
-
-        "players": {
-
-            players[i]: int(
-                kills[i]
+        team = str(
+            body.get(
+                "equipo",
+                ""
             )
+        ).strip()
 
-            for i in range(
-                min(
-                    len(players),
-                    len(kills)
+        game = str(
+            body.get(
+                "game",
+                ""
+            )
+        ).strip()
+
+        placement = int(
+            body.get(
+                "placement",
+                0
+            )
+        )
+
+        players = body.get(
+            "jugadores",
+            []
+        )
+
+        kills = body.get(
+            "kills",
+            []
+        )
+
+        db = load()
+
+        if team not in db["equipos"]:
+
+            return jsonify({
+                "error": "equipo no existe"
+            }), 400
+
+        if game not in db["equipos"][team]["games"]:
+
+            return jsonify({
+                "error": "partida no existe"
+            }), 400
+
+        total_kills = sum(
+            int(k)
+            for k in kills
+        )
+
+        db["equipos"][team]["games"][game] = {
+
+            "placement": placement,
+
+            "kills": total_kills,
+
+            "score": calcular_score(
+                placement,
+                total_kills
+            ),
+
+            "players": {
+
+                players[i]: int(
+                    kills[i]
                 )
-            )
+
+                for i in range(
+                    min(
+                        len(players),
+                        len(kills)
+                    )
+                )
+
+            }
 
         }
 
-    }
+        save(db)
 
-    save(db)
+        return jsonify({
+            "ok": True
+        })
 
-    return jsonify({
-        "ok": True
-    })
+    except Exception as e:
+
+        print("ERROR en /modificar:")
+        print(e)
+
+        return jsonify({
+            "ok": False,
+            "error": str(e)
+        }), 400
 
 
 # ============================================================
@@ -596,6 +344,10 @@ def home():
         {}
     )
 
+    # ========================================================
+    # ALL GAMES
+    # ========================================================
+
     allgames = sorted(
         {
             g
@@ -611,6 +363,7 @@ def home():
             else str(x)
         )
     )
+
 
     # ========================================================
     # DUPLICATE POSITIONS
@@ -641,6 +394,7 @@ def home():
             )
 
             posiciones_por_game[g][pos] += 1
+
 
     # ========================================================
     # RANKING
@@ -690,10 +444,12 @@ def home():
 
         })
 
+
     ranking.sort(
         key=lambda x: x["score"],
         reverse=True
     )
+
 
     # ========================================================
     # FRAGGER
@@ -732,18 +488,19 @@ def home():
 
                 fragger[p]["kills"] += int(k)
 
+
     fraggers = sorted(
         fragger.items(),
         key=lambda x: x[1]["kills"],
         reverse=True
     )
 
+
     # ========================================================
     # HTML
     # ========================================================
 
     html = """
-
 <!DOCTYPE html>
 
 <html lang="es">
@@ -754,213 +511,475 @@ def home():
 
 <meta
     name="viewport"
-    content="width=device-width, initial-scale=1.0"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
 >
 
 <title>TORNEOS MANYN</title>
 
 <style>
 
-/* ==========================================================
-   BASE
-   ========================================================== */
+/* =========================================================
+   GLOBAL
+   ========================================================= */
 
 * {
     box-sizing: border-box;
 }
 
 html {
-    background: #0d1113;
+    width: 100%;
+    min-width: 100%;
 }
 
 body {
 
     margin: 0;
 
-    padding: 18px 12px 40px;
+    padding: 25px;
 
     background:
         radial-gradient(
-            circle at 50% -20%,
-            #263136 0%,
-            #141a1c 34%,
-            #0d1113 75%
+            circle at top,
+            #252a2d 0%,
+            #111416 45%,
+            #090a0b 100%
         );
 
-    color: #f4f4f4;
+    color: #ffffff;
 
     font-family:
         Arial,
         Helvetica,
         sans-serif;
 
-    min-height: 100vh;
+    overflow-x: hidden;
+
+    -webkit-text-size-adjust: 100%;
+
+    text-size-adjust: 100%;
+}
+
+
+/* =========================================================
+   MAIN CONTAINER
+   ========================================================= */
+
+.main-container {
+
+    width: 100%;
+
+    max-width: 1500px;
+
+    min-width: 1100px;
+
+    margin: 0 auto;
 
 }
 
 
-/* ==========================================================
+/* =========================================================
    TITLE
-   ========================================================== */
+   ========================================================= */
 
 .main-title {
 
     text-align: center;
 
-    margin:
-        5px 0
-        22px;
+    font-size: 36px;
 
-    font-family:
-        Impact,
-        "Arial Black",
-        Arial,
-        sans-serif;
+    font-weight: 1000;
 
-    font-size:
-        clamp(
-            34px,
-            5vw,
-            64px
-        );
+    letter-spacing: 4px;
 
-    letter-spacing: 5px;
+    margin-bottom: 30px;
 
     color: #ffffff;
-
-    text-transform: uppercase;
-
-    text-shadow:
-        0 2px 0 #000000,
-        0 0 8px rgba(
-            255,
-            255,
-            255,
-            0.25
-        );
 
 }
 
 
-/* ==========================================================
-   RANK CARD
-   ========================================================== */
+/* =========================================================
+   RANK BOX
+   ========================================================= */
 
-.rank-card {
+.rank-box {
+
+    position: relative;
 
     width: 100%;
 
-    min-height: 185px;
+    height: 145px;
 
-    margin-bottom: 10px;
+    margin-top: 25px;
+
+    padding: 20px;
+
+    border-radius: 18px;
+
+    background:
+        linear-gradient(
+            145deg,
+            #252b2e,
+            #121517
+        );
+
+    border: 1px solid #353d40;
+
+    box-shadow:
+        0 12px 25px rgba(0,0,0,.45),
+        inset 0 1px 0 rgba(255,255,255,.04);
+
+}
+
+
+/* =========================================================
+   RANK LABEL
+   ========================================================= */
+
+.rank-label {
+
+    position: absolute;
+
+    top: 13px;
+
+    left: 22px;
+
+    font-size: 12px;
+
+    font-weight: 900;
+
+    letter-spacing: 2px;
+
+    color: #b8c0c3;
+
+}
+
+
+/* =========================================================
+   RANK NUMBER
+   ========================================================= */
+
+.rank-number {
+
+    position: absolute;
+
+    left: 22px;
+
+    bottom: 23px;
+
+    font-size: 32px;
+
+    font-weight: 1000;
+
+    white-space: nowrap;
+
+}
+
+
+/* =========================================================
+   POINTS
+   ========================================================= */
+
+.rank-points {
+
+    position: absolute;
+
+    right: 150px;
+
+    top: 40px;
+
+    font-size: 34px;
+
+    font-weight: 1000;
+
+    color: #dfff00;
+
+    text-align: center;
+
+    width: 100px;
+
+}
+
+
+.rank-points-label {
+
+    position: absolute;
+
+    right: 150px;
+
+    top: 82px;
+
+    width: 100px;
+
+    text-align: center;
+
+    font-size: 10px;
+
+    font-weight: 800;
+
+    color: #8d979b;
+
+}
+
+
+/* =========================================================
+   KILLS
+   ========================================================= */
+
+.rank-kills {
+
+    position: absolute;
+
+    right: 35px;
+
+    top: 40px;
+
+    font-size: 34px;
+
+    font-weight: 1000;
+
+    color: #39ff14;
+
+    text-align: center;
+
+    width: 80px;
+
+}
+
+
+.rank-kills-label {
+
+    position: absolute;
+
+    right: 35px;
+
+    top: 82px;
+
+    width: 80px;
+
+    text-align: center;
+
+    font-size: 10px;
+
+    font-weight: 800;
+
+    color: #8d979b;
+
+}
+
+
+/* =========================================================
+   PLAYERS
+   ========================================================= */
+
+.players-area {
+
+    margin-top: 10px;
+
+    border-radius: 12px;
+
+    overflow: hidden;
+
+    border: 1px solid #30383b;
+
+    background: #171b1d;
+
+}
+
+
+.player-header,
+.player-row {
 
     display: grid;
 
     grid-template-columns:
-        90px
-        270px
-        minmax(
-            500px,
-            1fr
-        );
+        minmax(0, 1fr)
+        130px
+        100px;
 
-    gap: 0;
+    width: 100%;
 
-    background:
-        linear-gradient(
-            135deg,
-            #20282b 0%,
-            #1b2326 50%,
-            #182023 100%
-        );
+}
 
-    border:
-        1px solid
-        rgba(
-            255,
-            255,
-            255,
-            0.06
-        );
 
-    border-radius: 20px;
+.player-header {
+
+    height: 34px;
+
+    align-items: center;
+
+    background: #22282b;
+
+    color: #9ba4a8;
+
+    font-size: 10px;
+
+    font-weight: 900;
+
+    letter-spacing: 1px;
+
+}
+
+
+.player-header > div {
+
+    padding: 0 15px;
+
+}
+
+
+.player-header > div:nth-child(2),
+.player-header > div:nth-child(3) {
+
+    text-align: right;
+
+}
+
+
+.player-row {
+
+    min-height: 39px;
+
+    align-items: center;
+
+    border-top: 1px solid #282e31;
+
+}
+
+
+.player-name {
+
+    padding-left: 15px;
+
+    font-weight: 900;
+
+    font-size: 13px;
+
+    white-space: nowrap;
 
     overflow: hidden;
 
-    box-shadow:
-        0 8px 22px
-        rgba(
-            0,
-            0,
-            0,
-            0.65
-        ),
-        inset 0 1px 0
-        rgba(
-            255,
-            255,
-            255,
-            0.035
+    text-overflow: ellipsis;
+
+}
+
+
+.player-avg,
+.player-kills {
+
+    text-align: right;
+
+    padding-right: 15px;
+
+    font-size: 13px;
+
+    font-weight: 900;
+
+}
+
+
+.player-avg {
+
+    color: #aab2b5;
+
+}
+
+
+.player-kills {
+
+    color: #39ff14;
+
+}
+
+
+/* =========================================================
+   GAMES
+   ========================================================= */
+
+.games-area {
+
+    margin-top: 10px;
+
+    width: 100%;
+
+    overflow: hidden;
+
+    border-radius: 12px;
+
+    border: 1px solid #30383b;
+
+    background: #15191b;
+
+}
+
+
+.game-header,
+.game-values {
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(
+            var(--games-count),
+            1fr
         );
 
+    width: 100%;
+
 }
 
 
-/* ==========================================================
-   TOP 1 / 2 / 3 COLORS
-   ========================================================== */
+.game-header {
 
-.rank-card.top1 {
-    --accent: #ffd21a;
-    --accent-dark: #a98200;
-    --accent-bg: #26261a;
-}
+    min-height: 42px;
 
-.rank-card.top2 {
-    --accent: #8ee600;
-    --accent-dark: #4f8700;
-    --accent-bg: #1d2918;
-}
+    background: #22282b;
 
-.rank-card.top3 {
-    --accent: #ff1493;
-    --accent-dark: #9c0758;
-    --accent-bg: #2a1823;
-}
+    border-bottom: 1px solid #343c3f;
 
-.rank-card.other {
-    --accent: #9ca3a8;
-    --accent-dark: #4b5155;
-    --accent-bg: #202427;
 }
 
 
-/* ==========================================================
-   RANK BOX
-   ========================================================== */
+.game-header span {
 
-.rank-box {
+    display: flex;
 
-    background:
-        linear-gradient(
-            180deg,
-            rgba(
-                255,
-                255,
-                255,
-                0.025
-            ),
-            rgba(
-                0,
-                0,
-                0,
-                0.10
-            )
-        );
+    align-items: center;
 
-    border-radius: 14px;
+    justify-content: center;
 
-    margin: 7px;
+    min-width: 0;
+
+    font-size: 13px;
+
+    font-weight: 1000;
+
+    color: #ffffff;
+
+    letter-spacing: 1px;
+
+    border-right: 1px solid #343c3f;
+
+}
+
+
+.game-header span:last-child {
+
+    border-right: none;
+
+}
+
+
+.game-values {
+
+    min-height: 72px;
+
+}
+
+
+.game-column {
+
+    min-width: 0;
 
     display: flex;
 
@@ -970,369 +989,76 @@ body {
 
     justify-content: center;
 
-    position: relative;
+    border-right: 1px solid #2c3336;
 
 }
 
 
-/* ==========================================================
-   LABEL
-   ========================================================== */
+.game-column:last-child {
 
-.rank-label {
-
-    position: absolute;
-
-    top: 0;
-    left: 0;
-    right: 0;
-
-    height: 23px;
-
-    display: flex;
-
-    align-items: center;
-
-    justify-content: center;
-
-    background:
-        var(--accent);
-
-    color:
-        #101010;
-
-    font-size: 9px;
-
-    font-weight: 900;
-
-    letter-spacing: 0.5px;
-
-    text-transform: uppercase;
-
-    border-radius:
-        13px 13px 0 0;
-
-}
-
-
-/* ==========================================================
-   RANK NUMBER
-   ========================================================== */
-
-.rank-number {
-
-    margin-top: 15px;
-
-    font-size: 38px;
-
-    line-height: 1;
-
-    font-weight: 900;
-
-    color:
-        var(--accent);
-
-    text-shadow:
-        0 0 8px
-        color-mix(
-            in srgb,
-            var(--accent) 35%,
-            transparent
-        );
-
-}
-
-
-/* ==========================================================
-   POINTS
-   ========================================================== */
-
-.rank-points {
-
-    margin-top: 17px;
-
-    color:
-        var(--accent);
-
-    font-size: 16px;
-
-    font-weight: 900;
-
-}
-
-.rank-points-label {
-
-    color: #c4c9cc;
-
-    font-size: 9px;
-
-    margin-top: 1px;
-
-}
-
-.rank-kills {
-
-    margin-top: 10px;
-
-    color: #ffffff;
-
-    font-size: 13px;
-
-    font-weight: 800;
-
-}
-
-.rank-kills-label {
-
-    color: #aeb5b8;
-
-    font-size: 9px;
-
-}
-
-
-/* ==========================================================
-   TEAM / PLAYERS
-   ========================================================== */
-
-.players-area {
-
-    padding:
-        15px 12px
-        10px 12px;
-
-    min-width: 0;
-
-}
-
-
-.player-header {
-
-    display: grid;
-
-    grid-template-columns:
-        minmax(120px, 1fr)
-        55px
-        55px;
-
-    color: #727b80;
-
-    font-size: 8px;
-
-    margin-bottom: 4px;
-
-    text-transform: uppercase;
-
-}
-
-
-.player-row {
-
-    display: grid;
-
-    grid-template-columns:
-        minmax(120px, 1fr)
-        55px
-        55px;
-
-    height: 27px;
-
-    align-items: center;
-
-    border-bottom:
-        1px solid
-        rgba(
-            255,
-            255,
-            255,
-            0.05
-        );
-
-}
-
-
-.player-name {
-
-    color: #ffffff;
-
-    font-size: 13px;
-
-    font-weight: 800;
-
-    letter-spacing: 0.4px;
-
-}
-
-
-.player-avg {
-
-    color: #aab2b6;
-
-    font-size: 11px;
-
-    text-align: center;
-
-}
-
-
-.player-kills {
-
-    color: #dfe3e5;
-
-    font-size: 11px;
-
-    text-align: center;
-
-}
-
-
-/* ==========================================================
-   GAME AREA
-   ========================================================== */
-
-.games-area {
-
-    padding:
-        15px 10px
-        10px 10px;
-
-    overflow-x: auto;
-
-}
-
-
-/* ==========================================================
-   GAMES GRID
-   ========================================================== */
-
-.games-grid {
-
-    display: grid;
-
-    grid-template-columns:
-        repeat(
-            var(--game-count),
-            minmax(
-                42px,
-                1fr
-            )
-        );
-
-    min-width:
-        calc(
-            var(--game-count) * 42px
-        );
-
-    gap: 3px;
-
-}
-
-
-/* ==========================================================
-   GAME HEADERS
-   ========================================================== */
-
-.game-header {
-
-    color: #727b80;
-
-    font-size: 8px;
-
-    text-align: center;
-
-    margin-bottom: 5px;
-
-}
-
-
-/* ==========================================================
-   GAME DATA
-   ========================================================== */
-
-.game-values {
-
-    display: grid;
-
-    grid-template-columns:
-        repeat(
-            var(--game-count),
-            minmax(
-                42px,
-                1fr
-            )
-        );
-
-    gap: 3px;
-
-}
-
-
-.game-column {
-
-    min-width: 42px;
-
-    text-align: center;
-
-    color: #c8ced1;
-
-    font-size: 9px;
+    border-right: none;
 
 }
 
 
 .game-position {
 
-    color: #f3f3f3;
+    font-size: 20px;
 
-    font-size: 10px;
+    font-weight: 1000;
 
-    font-weight: 800;
+    line-height: 1;
+
+    color: #ffffff;
 
 }
 
 
 .game-score {
 
-    margin-top: 4px;
+    margin-top: 8px;
 
-    color: #aeb7bb;
+    font-size: 13px;
 
-    font-size: 9px;
+    font-weight: 900;
+
+    color: #dfff00;
 
 }
 
 
-/* ==========================================================
+.duplicate-pos {
+
+    color: #ff3131 !important;
+
+}
+
+
+/* =========================================================
    SUMMARY
-   ========================================================== */
+   ========================================================= */
 
 .summary-area {
 
-    grid-column:
-        2 / 4;
-
-    border-top:
-        1px solid
-        rgba(
-            255,
-            255,
-            255,
-            0.08
-        );
-
-    margin:
-        0 12px;
-
-    padding:
-        9px 0 10px;
+    margin-top: 10px;
 
     display: grid;
 
     grid-template-columns:
-        220px
-        1fr;
+        230px
+        minmax(0, 1fr);
 
-    align-items: center;
+    width: 100%;
+
+    min-height: 72px;
+
+    border-radius: 12px;
+
+    overflow: hidden;
+
+    border: 1px solid #30383b;
+
+    background: #15191b;
 
 }
 
@@ -1343,7 +1069,11 @@ body {
 
     align-items: center;
 
-    gap: 10px;
+    gap: 12px;
+
+    padding: 12px;
+
+    background: #202629;
 
 }
 
@@ -1352,9 +1082,7 @@ body {
 
     width: 40px;
 
-    height: 28px;
-
-    border-radius: 8px;
+    height: 40px;
 
     display: flex;
 
@@ -1362,15 +1090,15 @@ body {
 
     justify-content: center;
 
-    background:
-        var(--accent-bg);
+    border-radius: 10px;
 
-    color:
-        var(--accent);
+    background: #2c3336;
 
-    font-size: 12px;
+    color: #dfff00;
 
-    font-weight: 900;
+    font-size: 20px;
+
+    font-weight: 1000;
 
 }
 
@@ -1381,25 +1109,37 @@ body {
 
     grid-template-columns:
         repeat(
-            var(--game-count),
-            minmax(
-                42px,
-                1fr
-            )
+            var(--games-count),
+            1fr
         );
 
-    gap: 3px;
+    width: 100%;
 
 }
 
 
 .summary-item {
 
-    text-align: center;
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+
+    justify-content: center;
+
+    border-right: 1px solid #2c3336;
 
     font-size: 9px;
 
-    color: #9ca5a9;
+    color: #7f898d;
+
+}
+
+
+.summary-item:last-child {
+
+    border-right: none;
 
 }
 
@@ -1408,103 +1148,49 @@ body {
 
     color: #ffffff;
 
-    font-weight: 800;
+    font-size: 17px;
 
-    font-size: 9px;
+    font-weight: 1000;
 
-}
-
-
-/* ==========================================================
-   DUPLICATE
-   ========================================================== */
-
-.duplicate-pos {
-
-    color: #ff4d4d !important;
-
-    font-weight: 900;
-
-    text-shadow:
-        0 0 6px
-        rgba(
-            255,
-            50,
-            50,
-            0.7
-        );
+    margin-bottom: 3px;
 
 }
 
 
-/* ==========================================================
-   FRAGGER SECTION
-   ========================================================== */
+/* =========================================================
+   FRAGGER
+   ========================================================= */
 
-.section-title {
+.fragger-container {
 
-    margin:
-        32px 0 12px;
+    width: 100%;
 
-    text-align: center;
+    margin-top: 35px;
 
-    font-family:
-        "Arial Black",
-        Arial,
-        sans-serif;
-
-    font-size: 24px;
-
-    letter-spacing: 3px;
-
-    color: #ffffff;
-
-    text-shadow:
-        0 0 10px
-        rgba(
-            255,
-            20,
-            147,
-            0.55
-        );
-
-}
-
-
-/* ==========================================================
-   FRAGGER CARD
-   ========================================================== */
-
-.fragger-card {
-
-    background:
-        linear-gradient(
-            135deg,
-            #20282b,
-            #171d20
-        );
-
-    border:
-        1px solid
-        rgba(
-            255,
-            255,
-            255,
-            0.06
-        );
-
-    border-radius: 16px;
+    border-radius: 15px;
 
     overflow: hidden;
 
-    box-shadow:
-        0 7px 20px
-        rgba(
-            0,
-            0,
-            0,
-            0.55
-        );
+    border: 1px solid #30383b;
+
+    background: #15191b;
+
+}
+
+
+.fragger-title {
+
+    padding: 16px 20px;
+
+    font-size: 18px;
+
+    font-weight: 1000;
+
+    letter-spacing: 1px;
+
+    background: #202629;
+
+    color: #dfff00;
 
 }
 
@@ -1514,245 +1200,188 @@ body {
     display: grid;
 
     grid-template-columns:
-        55px
-        minmax(
-            180px,
-            1fr
-        )
-        minmax(
-            160px,
-            1fr
-        )
-        90px;
+        80px
+        minmax(0, 1fr)
+        minmax(0, 1fr)
+        110px;
 
-    min-height: 39px;
+    width: 100%;
+
+    min-height: 45px;
 
     align-items: center;
 
-    padding:
-        0 15px;
-
-    border-bottom:
-        1px solid
-        rgba(
-            255,
-            255,
-            255,
-            0.045
-        );
+    border-top: 1px solid #292f32;
 
 }
 
 
 .fragger-row.header {
 
-    min-height: 32px;
+    min-height: 38px;
 
-    color: #777f83;
+    background: #22282b;
 
-    font-size: 9px;
+    border-top: none;
 
-    text-transform: uppercase;
+    color: #8f989c;
+
+    font-size: 10px;
+
+    font-weight: 1000;
+
+    letter-spacing: 1px;
+
+}
+
+
+.fragger-row > div {
+
+    min-width: 0;
+
+    padding: 0 15px;
 
 }
 
 
 .fragger-pos {
 
-    font-size: 14px;
+    font-size: 15px;
 
-    font-weight: 900;
+    font-weight: 1000;
 
 }
 
 
 .fragger-player {
 
-    color: #ffffff;
-
-    font-size: 12px;
+    font-size: 13px;
 
     font-weight: 900;
+
+    white-space: nowrap;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
 
 }
 
 
 .fragger-team {
 
-    color: #9fa7ab;
+    font-size: 12px;
 
-    font-size: 11px;
+    font-weight: 800;
+
+    color: #9ca5a8;
+
+    white-space: nowrap;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
 
 }
 
 
 .fragger-kills {
 
-    color: #ffffff;
-
-    font-size: 13px;
-
-    font-weight: 900;
-
     text-align: right;
 
-}
+    font-size: 16px;
 
+    font-weight: 1000;
 
-/* ==========================================================
-   TOP 3 FRAGGER COLORS
-   ========================================================== */
-
-.fragger-row:nth-child(2)
-.fragger-pos {
-
-    color: #ffd21a;
-
-}
-
-.fragger-row:nth-child(3)
-.fragger-pos {
-
-    color: #8ee600;
-
-}
-
-.fragger-row:nth-child(4)
-.fragger-pos {
-
-    color: #ff1493;
+    color: #39ff14;
 
 }
 
 
-/* ==========================================================
-   SCROLLBAR
-   ========================================================== */
+/* =========================================================
+   TOP 1
+   ========================================================= */
 
-.games-area::-webkit-scrollbar {
+.top1 {
 
-    height: 5px;
+    border-color: #dfff00;
 
-}
-
-.games-area::-webkit-scrollbar-track {
-
-    background: #111618;
-
-}
-
-.games-area::-webkit-scrollbar-thumb {
-
-    background: #596166;
-
-    border-radius: 10px;
+    box-shadow:
+        0 0 18px rgba(223,255,0,.12),
+        0 12px 25px rgba(0,0,0,.45);
 
 }
 
 
-/* ==========================================================
-   RESPONSIVE
-   ========================================================== */
+.top1 .rank-label {
 
-@media (
-    max-width: 1000px
-) {
+    color: #dfff00;
+
+}
+
+
+/* =========================================================
+   TOP 2
+   ========================================================= */
+
+.top2 {
+
+    border-color: #c8c8c8;
+
+}
+
+
+.top2 .rank-label {
+
+    display: none;
+
+}
+
+
+/* =========================================================
+   TOP 3
+   ========================================================= */
+
+.top3 {
+
+    border-color: #cd7f32;
+
+}
+
+
+.top3 .rank-label {
+
+    color: #cd7f32;
+
+}
+
+
+/* =========================================================
+   OTHER
+   ========================================================= */
+
+.other {
+
+    border-color: #343b3e;
+
+}
+
+
+/* =========================================================
+   NO ZOOM / FIXED STRUCTURE
+   ========================================================= */
+
+@media (max-width: 900px) {
 
     body {
 
-        padding:
-            10px 6px 30px;
+        padding: 10px;
 
     }
 
-    .rank-card {
+    .main-container {
 
-        grid-template-columns:
-            70px
-            220px
-            minmax(
-                430px,
-                1fr
-            );
-
-    }
-
-    .player-name {
-
-        font-size: 11px;
-
-    }
-
-}
-
-
-@media (
-    max-width: 700px
-) {
-
-    .main-title {
-
-        font-size: 30px;
-
-        letter-spacing: 3px;
-
-    }
-
-    .rank-card {
-
-        grid-template-columns:
-            70px
-            210px
-            minmax(
-                420px,
-                1fr
-            );
-
-        min-height: 170px;
-
-    }
-
-    .rank-number {
-
-        font-size: 32px;
-
-    }
-
-    .player-row {
-
-        height: 25px;
-
-    }
-
-    .player-name {
-
-        font-size: 10px;
-
-    }
-
-    .player-avg,
-    .player-kills {
-
-        font-size: 9px;
-
-    }
-
-    .fragger-row {
-
-        grid-template-columns:
-            45px
-            minmax(
-                140px,
-                1fr
-            )
-            minmax(
-                120px,
-                1fr
-            )
-            60px;
-
-        padding:
-            0 9px;
+        min-width: 1100px;
 
     }
 
@@ -1764,406 +1393,459 @@ body {
 
 <body>
 
+<div class="main-container">
 
 <div class="main-title">
 
-    TORNEOS MANYN
+TORNEOS MANYN
 
 </div>
 
 """
 
 
-    # ========================================================
-    # RANK CARDS
-    # ========================================================
+# ============================================================
+# RANK CARDS
+# ============================================================
 
-    for pos, r in enumerate(
-        ranking,
-        start=1
-    ):
+for pos, r in enumerate(
+    ranking,
+    start=1
+):
 
-        if pos == 1:
+    if pos == 1:
 
-            rank_class = "top1"
-            label = "WINNERS"
+        rank_class = "top1"
+        label = "WINNERS"
 
-        elif pos == 2:
+    elif pos == 2:
 
-            rank_class = "top2"
-            label = "MATCH POINT"
+        rank_class = "top2"
+        label = ""
 
-        elif pos == 3:
+    elif pos == 3:
 
-            rank_class = "top3"
-            label = "TOP 3"
+        rank_class = "top3"
+        label = "TOP 3"
 
-        else:
+    else:
 
-            rank_class = "other"
-            label = "RANKING"
-
-        medal = (
-
-            "🥇"
-            if pos == 1
-            else
-            "🥈"
-            if pos == 2
-            else
-            "🥉"
-            if pos == 3
-            else
-            ""
-
-        )
-
-        html += f"""
-
-<div
-    class="rank-card {rank_class}"
-    style="--game-count:{max(len(allgames), 1)};"
->
+        rank_class = "other"
+        label = "RANKING"
 
 
-    <!-- RANK -->
+    medal = (
 
-    <div class="rank-box">
+        "🥇"
+        if pos == 1
 
-        <div class="rank-label">
+        else
 
-            {label}
+        "🥈"
+        if pos == 2
 
-        </div>
+        else
 
-        <div class="rank-number">
+        "🥉"
+        if pos == 3
 
-            {medal} {pos}
+        else
 
-        </div>
+        ""
 
-        <div class="rank-points">
+    )
 
-            {r["score"]}
 
-        </div>
+    html += f"""
 
-        <div class="rank-points-label">
+<div class="rank-box {rank_class}">
 
-            Points
+    <div class="rank-label">
 
-        </div>
-
-        <div class="rank-kills">
-
-            {r["kills"]}
-
-        </div>
-
-        <div class="rank-kills-label">
-
-            Kills
-
-        </div>
+        {label}
 
     </div>
 
+    <div class="rank-number">
 
-    <!-- PLAYERS -->
-
-    <div class="players-area">
-
-        <div class="player-header">
-
-            <div>PLAYER</div>
-            <div>AVG KILLS</div>
-            <div>KILLS</div>
-
-        </div>
-
-"""
-
-        # Get players from all games
-        player_stats = {}
-
-        for g, info in r["games"].items():
-
-            for p, k in info.get(
-                "players",
-                {}
-            ).items():
-
-                if isinstance(
-                    k,
-                    dict
-                ):
-
-                    k = k.get(
-                        "kills",
-                        0
-                    )
-
-                if p not in player_stats:
-
-                    player_stats[p] = {
-                        "kills": 0,
-                        "games": 0
-                    }
-
-                player_stats[p]["kills"] += int(k)
-                player_stats[p]["games"] += 1
-
-        sorted_players = sorted(
-            player_stats.items(),
-            key=lambda x: x[1]["kills"],
-            reverse=True
-        )
-
-        for p, stats in sorted_players[:3]:
-
-            avg = (
-                stats["kills"]
-                /
-                stats["games"]
-                if stats["games"]
-                else 0
-            )
-
-            html += f"""
-
-        <div class="player-row">
-
-            <div class="player-name">
-
-                {p}
-
-            </div>
-
-            <div class="player-avg">
-
-                {avg:.1f}
-
-            </div>
-
-            <div class="player-kills">
-
-                {stats["kills"]}
-
-            </div>
-
-        </div>
-
-"""
-
-        # ====================================================
-        # GAMES
-        # ====================================================
-
-        html += """
+        {medal} {pos}
 
     </div>
 
+    <div class="rank-points">
 
-    <div class="games-area">
+        {r["score"]}
 
-        <div class="game-header">
+    </div>
+
+    <div class="rank-points-label">
+
+        Points
+
+    </div>
+
+    <div class="rank-kills">
+
+        {r["kills"]}
+
+    </div>
+
+    <div class="rank-kills-label">
+
+        Kills
+
+    </div>
+
+</div>
+
+
+<div class="players-area">
+
+    <div class="player-header">
+
+        <div>PLAYER</div>
+
+        <div>AVG KILLS</div>
+
+        <div>KILLS</div>
+
+    </div>
 
 """
 
-        for g in allgames:
 
-            html += f"""
+    # ========================================================
+    # PLAYERS
+    # ========================================================
 
-            <span>
-
-                M{g}
-
-            </span>
-
-"""
-
-        html += """
-
-        </div>
+    player_stats = {}
 
 
-        <div class="game-values">
+    for g, info in r["games"].items():
 
-"""
+        for p, k in info.get(
+            "players",
+            {}
+        ).items():
 
-        for g in allgames:
+            if isinstance(
+                k,
+                dict
+            ):
 
-            info = r["games"].get(
-                g
-            )
-
-            if info:
-
-                placement = info.get(
-                    "placement",
-                    "-"
-                )
-
-                score = info.get(
-                    "score",
+                k = k.get(
+                    "kills",
                     0
                 )
 
-                duplicate = ""
+            if p not in player_stats:
 
-                if (
-                    posiciones_por_game
-                    .get(g, {})
-                    .get(
-                        placement,
-                        0
-                    ) > 1
-                ):
+                player_stats[p] = {
+                    "kills": 0,
+                    "games": 0
+                }
 
-                    duplicate = (
-                        "duplicate-pos"
-                    )
+            player_stats[p]["kills"] += int(k)
 
-                html += f"""
+            player_stats[p]["games"] += 1
 
-            <div class="game-column">
 
-                <div class="game-position {duplicate}">
+    sorted_players = sorted(
+        player_stats.items(),
+        key=lambda x: x[1]["kills"],
+        reverse=True
+    )
 
-                    {placement}
 
-                </div>
+    for p, stats in sorted_players[:3]:
 
-                <div class="game-score">
+        avg = (
 
-                    {score}
+            stats["kills"]
+            /
+            stats["games"]
 
-                </div>
+            if stats["games"]
 
-            </div>
+            else 0
 
-"""
+        )
 
-            else:
 
-                html += """
+        html += f"""
 
-            <div class="game-column">
+    <div class="player-row">
 
-                <div class="game-position">
+        <div class="player-name">
 
-                    -
+            {p}
 
-                </div>
+        </div>
 
-                <div class="game-score">
+        <div class="player-avg">
 
-                    -
+            {avg:.1f}
 
-                </div>
+        </div>
 
-            </div>
+        <div class="player-kills">
 
-"""
-
-        html += """
+            {stats["kills"]}
 
         </div>
 
     </div>
 
+"""
 
-    <!-- SUMMARY -->
 
-    <div class="summary-area">
+    # ========================================================
+    # GAMES
+    # ========================================================
 
-        <div class="summary-team">
+    games_count = max(
+        len(allgames),
+        1
+    )
 
-            <div class="team-mark">
 
-                M
+    html += f"""
+
+</div>
+
+<div class="games-area">
+
+    <div
+        class="game-header"
+        style="--games-count:{games_count};"
+    >
+
+"""
+
+
+    for g in allgames:
+
+        html += f"""
+
+        <span>
+
+            M{g}
+
+        </span>
+
+"""
+
+
+    html += f"""
+
+    </div>
+
+    <div
+        class="game-values"
+        style="--games-count:{games_count};"
+    >
+
+"""
+
+
+    for g in allgames:
+
+        info = r["games"].get(
+            g
+        )
+
+
+        if info:
+
+            placement = info.get(
+                "placement",
+                "-"
+            )
+
+            score = info.get(
+                "score",
+                0
+            )
+
+            duplicate = ""
+
+
+            if (
+
+                posiciones_por_game
+                .get(
+                    g,
+                    {}
+                )
+                .get(
+                    placement,
+                    0
+                ) > 1
+
+            ):
+
+                duplicate = "duplicate-pos"
+
+
+            html += f"""
+
+        <div class="game-column">
+
+            <div class="game-position {duplicate}">
+
+                {placement}
 
             </div>
 
-            <div>
+            <div class="game-score">
 
-                <div
-                    style="
-                    color:#ffffff;
-                    font-weight:900;
-                    font-size:11px;
-                    "
-                >
-
-                    TOTAL
-
-                </div>
-
-                <div
-                    style="
-                    color:#8f989c;
-                    font-size:9px;
-                    "
-                >
-
-                    RESULTADO GENERAL
-
-                </div>
+                {score}
 
             </div>
 
         </div>
 
-        <div class="summary-values">
-
 """
 
-        for g in allgames:
 
-            info = r["games"].get(
-                g
-            )
+        else:
 
-            if info:
+            html += """
 
-                html += f"""
+        <div class="game-column">
 
-            <div class="summary-item">
-
-                <div class="summary-label">
-
-                    {info.get(
-                        "kills",
-                        0
-                    )}
-
-                </div>
-
-                <div>
-
-                    Kills
-
-                </div>
-
-            </div>
-
-"""
-
-            else:
-
-                html += """
-
-            <div class="summary-item">
+            <div class="game-position">
 
                 -
 
             </div>
 
-"""
+            <div class="game-score">
 
-        html += """
+                -
+
+            </div>
 
         </div>
+
+"""
+
+
+    # ========================================================
+    # SUMMARY
+    # ========================================================
+
+    html += f"""
+
+    </div>
+
+</div>
+
+
+<div class="summary-area">
+
+    <div class="summary-team">
+
+        <div class="team-mark">
+
+            M
+
+        </div>
+
+        <div>
+
+            <div
+                style="
+                color:#ffffff;
+                font-weight:900;
+                font-size:11px;
+                "
+            >
+
+                TOTAL
+
+            </div>
+
+            <div
+                style="
+                color:#8f989c;
+                font-size:9px;
+                "
+            >
+
+                RESULTADO GENERAL
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div
+        class="summary-values"
+        style="--games-count:{games_count};"
+    >
+
+"""
+
+
+    for g in allgames:
+
+        info = r["games"].get(
+            g
+        )
+
+
+        if info:
+
+            html += f"""
+
+        <div class="summary-item">
+
+            <div class="summary-label">
+
+                {info.get(
+                    "kills",
+                    0
+                )}
+
+            </div>
+
+            <div>
+
+                Kills
+
+            </div>
+
+        </div>
+
+"""
+
+
+        else:
+
+            html += """
+
+        <div class="summary-item">
+
+            <div class="summary-label">
+
+                -
+
+            </div>
+
+            <div>
+
+                Kills
+
+            </div>
+
+        </div>
+
+"""
+
+
+    html += """
 
     </div>
 
@@ -2172,21 +1854,19 @@ body {
 """
 
 
-    # ========================================================
-    # FRAGGER
-    # ========================================================
+# ============================================================
+# FRAGGER TABLE
+# ============================================================
 
-    html += """
+html += """
 
-<div class="section-title">
+<div class="fragger-container">
 
-    🔥 FRAGGER TABLE
+    <div class="fragger-title">
 
-</div>
+        🔥 FRAGGER TABLE
 
-
-<div class="fragger-card">
-
+    </div>
 
     <div class="fragger-row header">
 
@@ -2206,63 +1886,75 @@ body {
 
 """
 
-    ppos = 1
 
-    for p, s in fraggers:
+ppos = 1
 
-        medal = (
 
-            "🥇"
-            if ppos == 1
-            else
-            "🥈"
-            if ppos == 2
-            else
-            "🥉"
-            if ppos == 3
-            else
-            ""
+for p, s in fraggers:
 
-        )
+    medal = (
 
-        html += f"""
+        "🥇"
+        if ppos == 1
 
-    <div class="fragger-row">
+        else
 
-        <div class="fragger-pos">
+        "🥈"
+        if ppos == 2
 
-            {medal} {ppos}
+        else
 
-        </div>
+        "🥉"
+        if ppos == 3
 
-        <div class="fragger-player">
+        else
 
-            {p}
+        ""
 
-        </div>
+    )
 
-        <div class="fragger-team">
 
-            {s["team"]}
+    html += f"""
 
-        </div>
+<div class="fragger-row">
 
-        <div class="fragger-kills">
+    <div class="fragger-pos">
 
-            {s["kills"]}
-
-        </div>
+        {medal} {ppos}
 
     </div>
 
-"""
+    <div class="fragger-player">
 
-        ppos += 1
+        {p}
 
-    html += """
+    </div>
+
+    <div class="fragger-team">
+
+        {s["team"]}
+
+    </div>
+
+    <div class="fragger-kills">
+
+        {s["kills"]}
+
+    </div>
 
 </div>
 
+"""
+
+
+    ppos += 1
+
+
+html += """
+
+</div>
+
+</div>
 
 </body>
 
@@ -2270,7 +1962,8 @@ body {
 
 """
 
-    return html
+
+return html
 
 
 # ============================================================
