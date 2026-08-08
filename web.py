@@ -1,3 +1,4 @@
+```python
 from flask import Flask, request, jsonify
 import json
 import os
@@ -83,7 +84,9 @@ def find_drive_folder():
         folders = results.get("files", [])
 
         if not folders:
+
             print("ERROR: No se encontró la carpeta TORNEOS MANYN.")
+
             return None
 
         folder_id = folders[0]["id"]
@@ -186,6 +189,7 @@ def restore_from_drive():
         data = json.loads(content)
 
         with open(DB, "w", encoding="utf8") as f:
+
             json.dump(
                 data,
                 f,
@@ -212,13 +216,17 @@ def backup_to_drive():
     service = get_drive_service()
 
     if service is None:
+
         print("No se pudo conectar con Google Drive.")
+
         return False
 
     folder_id = find_drive_folder()
 
     if folder_id is None:
+
         print("No se encontró TORNEOS MANYN.")
+
         return False
 
     try:
@@ -275,7 +283,6 @@ def backup_to_drive():
 
 def load():
 
-    # Si existe data.json localmente, lo usamos.
     if os.path.exists(DB):
 
         try:
@@ -289,7 +296,6 @@ def load():
             print("ERROR leyendo data.json:")
             print(e)
 
-            # Intentamos recuperar desde Google Drive
             restored = restore_from_drive()
 
             if restored:
@@ -297,15 +303,15 @@ def load():
                 try:
 
                     with open(DB, "r", encoding="utf8") as f:
+
                         return json.load(f)
 
                 except Exception:
+
                     pass
 
             return {"equipos": {}}
 
-    # Si Render perdió data.json después de reiniciarse,
-    # intentamos recuperarlo desde Google Drive.
     print("data.json no existe localmente.")
     print("Buscando respaldo en Google Drive...")
 
@@ -316,6 +322,7 @@ def load():
         try:
 
             with open(DB, "r", encoding="utf8") as f:
+
                 return json.load(f)
 
         except Exception as e:
@@ -341,8 +348,6 @@ def save(data):
 
     os.replace(tmp, DB)
 
-    # Después de guardar localmente,
-    # actualizamos el respaldo de Google Drive.
     backup_to_drive()
 
 
@@ -380,12 +385,27 @@ def report():
 
     body = request.json
 
-    team = str(body.get("equipo", "")).strip()
-    game = str(body.get("game", "")).strip()
-    placement = int(body.get("placement", 0))
+    team = str(
+        body.get("equipo", "")
+    ).strip()
 
-    players = body.get("jugadores", [])
-    kills = body.get("kills", [])
+    game = str(
+        body.get("game", "")
+    ).strip()
+
+    placement = int(
+        body.get("placement", 0)
+    )
+
+    players = body.get(
+        "jugadores",
+        []
+    )
+
+    kills = body.get(
+        "kills",
+        []
+    )
 
     db = load()
 
@@ -437,12 +457,27 @@ def modificar():
 
     body = request.json
 
-    team = str(body.get("equipo", "")).strip()
-    game = str(body.get("game", "")).strip()
-    placement = int(body.get("placement", 0))
+    team = str(
+        body.get("equipo", "")
+    ).strip()
 
-    players = body.get("jugadores", [])
-    kills = body.get("kills", [])
+    game = str(
+        body.get("game", "")
+    ).strip()
+
+    placement = int(
+        body.get("placement", 0)
+    )
+
+    players = body.get(
+        "jugadores",
+        []
+    )
+
+    kills = body.get(
+        "kills",
+        []
+    )
 
     db = load()
 
@@ -627,6 +662,17 @@ def home():
     )
 
     # ========================================================
+    # COLORES DE GAMES
+    # ========================================================
+
+    game_colors = [
+        "#00ff66",
+        "#d6ff00",
+        "#00ffaa",
+        "#aaff00"
+    ]
+
+    # ========================================================
     # HTML
     # ========================================================
 
@@ -725,12 +771,23 @@ def home():
 
     """
 
-    html += "<table><tr><th>POS</th><th>TEAM</th>"
+    # ========================================================
+    # GENERAL TABLE
+    # ========================================================
+
+    html += (
+        "<table>"
+        "<tr>"
+        "<th>POS</th>"
+        "<th>TEAM</th>"
+    )
 
     for g in allgames:
 
         color = (
-            game_colors[int(g) % len(game_colors)]
+            game_colors[
+                int(g) % len(game_colors)
+            ]
             if str(g).isdigit()
             else "#00ff66"
         )
@@ -890,3 +947,4 @@ if __name__ == "__main__":
         host="0.0.0.0",
         port=10000
     )
+```
