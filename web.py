@@ -12,6 +12,7 @@ app = Flask(__name__)
 
 DB = "data.json"
 
+
 # ============================================================
 # GOOGLE DRIVE
 # ============================================================
@@ -84,7 +85,7 @@ def find_drive_folder():
 
         if not folders:
 
-            print("ERROR: No se encontró la carpeta TORNEOS MANYN.")
+            print("No existe todavía la carpeta TORNEOS MANYN.")
 
             return None
 
@@ -142,6 +143,7 @@ def find_drive_backup():
     except Exception as e:
 
         print("ERROR buscando respaldo:")
+
         print(e)
 
         return None
@@ -203,6 +205,7 @@ def restore_from_drive():
     except Exception as e:
 
         print("ERROR restaurando respaldo:")
+
         print(e)
 
         return False
@@ -267,42 +270,72 @@ def backup_to_drive():
     except Exception as e:
 
         print("ERROR creando respaldo:")
+
         print(e)
 
         return False
 
 
 # ============================================================
-# DB
+# DATABASE
 # ============================================================
 
 def load():
 
-    if os.path.exists(DB):
+    if not os.path.exists(DB):
 
-        try:
+        print("data.json no existe localmente.")
 
-            with open(DB, "r", encoding="utf8") as f:
+        print("Buscando respaldo en Google Drive...")
 
-                return json.load(f)
+        if restore_from_drive():
 
-        except Exception as e:
+            try:
 
-            print("ERROR leyendo data.json:")
-            print(e)
+                with open(DB, "r", encoding="utf8") as f:
 
-            return {"equipos": {}}
+                    return json.load(f)
 
-    print("data.json no existe localmente.")
+            except Exception:
 
-    return {"equipos": {}}
+                return {
+                    "equipos": {}
+                }
+
+        return {
+            "equipos": {}
+        }
+
+    try:
+
+        with open(
+            DB,
+            "r",
+            encoding="utf8"
+        ) as f:
+
+            return json.load(f)
+
+    except Exception as e:
+
+        print("ERROR leyendo data.json:")
+
+        print(e)
+
+        return {
+            "equipos": {}
+        }
 
 
 def save(data):
 
     tmp = DB + ".tmp"
 
-    with open(tmp, "w", encoding="utf8") as f:
+    with open(
+        tmp,
+        "w",
+        encoding="utf8"
+    ) as f:
 
         json.dump(
             data,
@@ -311,7 +344,10 @@ def save(data):
             ensure_ascii=False
         )
 
-    os.replace(tmp, DB)
+    os.replace(
+        tmp,
+        DB
+    )
 
     backup_to_drive()
 
@@ -320,7 +356,10 @@ def save(data):
 # SCORE SYSTEM
 # ============================================================
 
-def calcular_score(placement, kills):
+def calcular_score(
+    placement,
+    kills
+):
 
     if placement == 1:
 
@@ -338,23 +377,43 @@ def calcular_score(placement, kills):
 
         mult = 1
 
-    return round(kills * mult, 2)
+    return round(
+        kills * mult,
+        2
+    )
 
 
 # ============================================================
 # REPORT
 # ============================================================
 
-@app.route("/report", methods=["POST"])
+@app.route(
+    "/report",
+    methods=["POST"]
+)
 def report():
 
     body = request.json
 
-    team = str(body.get("equipo", "")).strip()
-    game = str(body.get("game", "")).strip()
+    team = str(
+        body.get(
+            "equipo",
+            ""
+        )
+    ).strip()
+
+    game = str(
+        body.get(
+            "game",
+            ""
+        )
+    ).strip()
 
     placement = int(
-        body.get("placement", 0)
+        body.get(
+            "placement",
+            0
+        )
     )
 
     players = body.get(
@@ -388,7 +447,9 @@ def report():
 
         "players": {
 
-            players[i]: int(kills[i])
+            players[i]: int(
+                kills[i]
+            )
 
             for i in range(
                 min(
@@ -409,19 +470,36 @@ def report():
 
 
 # ============================================================
-# MODIFY
+# MODIFY MATCH
 # ============================================================
 
-@app.route("/modificar", methods=["POST"])
+@app.route(
+    "/modificar",
+    methods=["POST"]
+)
 def modificar():
 
     body = request.json
 
-    team = str(body.get("equipo", "")).strip()
-    game = str(body.get("game", "")).strip()
+    team = str(
+        body.get(
+            "equipo",
+            ""
+        )
+    ).strip()
+
+    game = str(
+        body.get(
+            "game",
+            ""
+        )
+    ).strip()
 
     placement = int(
-        body.get("placement", 0)
+        body.get(
+            "placement",
+            0
+        )
     )
 
     players = body.get(
@@ -461,7 +539,9 @@ def modificar():
 
         "players": {
 
-            players[i]: int(kills[i])
+            players[i]: int(
+                kills[i]
+            )
 
             for i in range(
                 min(
@@ -482,10 +562,13 @@ def modificar():
 
 
 # ============================================================
-# BORRAR
+# DELETE
 # ============================================================
 
-@app.route("/borrar", methods=["POST"])
+@app.route(
+    "/borrar",
+    methods=["POST"]
+)
 def borrar():
 
     db = load()
@@ -508,25 +591,44 @@ def home():
 
     db = load()
 
-    equipos = db["equipos"]
+    equipos = db.get(
+        "equipos",
+        {}
+    )
 
     allgames = sorted(
         {
             g
-            for t in equipos
-            for g in equipos[t]["games"]
-        }
+            for team in equipos
+            for g in equipos[team].get(
+                "games",
+                {}
+            )
+        },
+        key=lambda x: (
+            int(x)
+            if str(x).isdigit()
+            else str(x)
+        )
     )
 
-    ranking = []
+    # ========================================================
+    # DUPLICATE POSITIONS
+    # ========================================================
 
     posiciones_por_game = {}
 
     for team, data in equipos.items():
 
-        for g, info in data["games"].items():
+        for g, info in data.get(
+            "games",
+            {}
+        ).items():
 
-            pos = info["placement"]
+            pos = info.get(
+                "placement",
+                0
+            )
 
             posiciones_por_game.setdefault(
                 g,
@@ -540,15 +642,38 @@ def home():
 
             posiciones_por_game[g][pos] += 1
 
+    # ========================================================
+    # RANKING
+    # ========================================================
+
+    ranking = []
+
     for team, data in equipos.items():
 
         score = 0
+
         kills = 0
 
-        for g, info in data["games"].items():
+        games = data.get(
+            "games",
+            {}
+        )
 
-            score += info["score"]
-            kills += info["kills"]
+        for g, info in games.items():
+
+            score += float(
+                info.get(
+                    "score",
+                    0
+                )
+            )
+
+            kills += int(
+                info.get(
+                    "kills",
+                    0
+                )
+            )
 
         ranking.append({
 
@@ -561,7 +686,7 @@ def home():
 
             "kills": kills,
 
-            "games": data["games"]
+            "games": games
 
         })
 
@@ -578,19 +703,34 @@ def home():
 
     for team, data in equipos.items():
 
-        for g, info in data["games"].items():
+        for g, info in data.get(
+            "games",
+            {}
+        ).items():
 
-            for p, k in info["players"].items():
+            for p, k in info.get(
+                "players",
+                {}
+            ).items():
 
-                fragger[p] = fragger.get(
-                    p,
-                    {
+                if isinstance(
+                    k,
+                    dict
+                ):
+
+                    k = k.get(
+                        "kills",
+                        0
+                    )
+
+                if p not in fragger:
+
+                    fragger[p] = {
                         "team": team,
                         "kills": 0
                     }
-                )
 
-                fragger[p]["kills"] += k
+                fragger[p]["kills"] += int(k)
 
     fraggers = sorted(
         fragger.items(),
@@ -599,57 +739,55 @@ def home():
     )
 
     # ========================================================
-    # COLORES GAMES
-    # ========================================================
-
-    game_colors = [
-        "#a855f7",
-        "#c026d3",
-        "#7c3aed",
-        "#9333ea",
-        "#d946ef",
-        "#8b5cf6"
-    ]
-
-    # ========================================================
-    # HTML + CSS NEON ESPORTS
+    # HTML
     # ========================================================
 
     html = """
+
 <!DOCTYPE html>
 
-<html>
+<html lang="es">
 
 <head>
 
 <meta charset="UTF-8">
 
-<meta name="viewport"
-      content="width=device-width, initial-scale=1.0">
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+>
 
 <title>TORNEOS MANYN</title>
 
 <style>
 
+/* ==========================================================
+   BASE
+   ========================================================== */
+
 * {
     box-sizing: border-box;
+}
+
+html {
+    background: #0d1113;
 }
 
 body {
 
     margin: 0;
 
-    padding: 18px;
+    padding: 18px 12px 40px;
 
     background:
         radial-gradient(
-            circle at top,
-            #241044 0%,
-            #10091c 32%,
-            #050508 75%
+            circle at 50% -20%,
+            #263136 0%,
+            #141a1c 34%,
+            #0d1113 75%
         );
 
-    color: #ffffff;
+    color: #f4f4f4;
 
     font-family:
         Arial,
@@ -660,373 +798,961 @@ body {
 
 }
 
+
 /* ==========================================================
    TITLE
    ========================================================== */
 
-.title {
+.main-title {
 
     text-align: center;
 
-    margin: 8px 0 22px 0;
+    margin:
+        5px 0
+        22px;
+
+    font-family:
+        Impact,
+        "Arial Black",
+        Arial,
+        sans-serif;
+
+    font-size:
+        clamp(
+            34px,
+            5vw,
+            64px
+        );
+
+    letter-spacing: 5px;
+
+    color: #ffffff;
+
+    text-transform: uppercase;
+
+    text-shadow:
+        0 2px 0 #000000,
+        0 0 8px rgba(
+            255,
+            255,
+            255,
+            0.25
+        );
+
+}
+
+
+/* ==========================================================
+   RANK CARD
+   ========================================================== */
+
+.rank-card {
+
+    width: 100%;
+
+    min-height: 185px;
+
+    margin-bottom: 10px;
+
+    display: grid;
+
+    grid-template-columns:
+        90px
+        270px
+        minmax(
+            500px,
+            1fr
+        );
+
+    gap: 0;
+
+    background:
+        linear-gradient(
+            135deg,
+            #20282b 0%,
+            #1b2326 50%,
+            #182023 100%
+        );
+
+    border:
+        1px solid
+        rgba(
+            255,
+            255,
+            255,
+            0.06
+        );
+
+    border-radius: 20px;
+
+    overflow: hidden;
+
+    box-shadow:
+        0 8px 22px
+        rgba(
+            0,
+            0,
+            0,
+            0.65
+        ),
+        inset 0 1px 0
+        rgba(
+            255,
+            255,
+            255,
+            0.035
+        );
+
+}
+
+
+/* ==========================================================
+   TOP 1 / 2 / 3 COLORS
+   ========================================================== */
+
+.rank-card.top1 {
+    --accent: #ffd21a;
+    --accent-dark: #a98200;
+    --accent-bg: #26261a;
+}
+
+.rank-card.top2 {
+    --accent: #8ee600;
+    --accent-dark: #4f8700;
+    --accent-bg: #1d2918;
+}
+
+.rank-card.top3 {
+    --accent: #ff1493;
+    --accent-dark: #9c0758;
+    --accent-bg: #2a1823;
+}
+
+.rank-card.other {
+    --accent: #9ca3a8;
+    --accent-dark: #4b5155;
+    --accent-bg: #202427;
+}
+
+
+/* ==========================================================
+   RANK BOX
+   ========================================================== */
+
+.rank-box {
+
+    background:
+        linear-gradient(
+            180deg,
+            rgba(
+                255,
+                255,
+                255,
+                0.025
+            ),
+            rgba(
+                0,
+                0,
+                0,
+                0.10
+            )
+        );
+
+    border-radius: 14px;
+
+    margin: 7px;
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+
+    justify-content: center;
+
+    position: relative;
+
+}
+
+
+/* ==========================================================
+   LABEL
+   ========================================================== */
+
+.rank-label {
+
+    position: absolute;
+
+    top: 0;
+    left: 0;
+    right: 0;
+
+    height: 23px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    background:
+        var(--accent);
+
+    color:
+        #101010;
+
+    font-size: 9px;
+
+    font-weight: 900;
+
+    letter-spacing: 0.5px;
+
+    text-transform: uppercase;
+
+    border-radius:
+        13px 13px 0 0;
+
+}
+
+
+/* ==========================================================
+   RANK NUMBER
+   ========================================================== */
+
+.rank-number {
+
+    margin-top: 15px;
+
+    font-size: 38px;
+
+    line-height: 1;
+
+    font-weight: 900;
+
+    color:
+        var(--accent);
+
+    text-shadow:
+        0 0 8px
+        color-mix(
+            in srgb,
+            var(--accent) 35%,
+            transparent
+        );
+
+}
+
+
+/* ==========================================================
+   POINTS
+   ========================================================== */
+
+.rank-points {
+
+    margin-top: 17px;
+
+    color:
+        var(--accent);
+
+    font-size: 16px;
+
+    font-weight: 900;
+
+}
+
+.rank-points-label {
+
+    color: #c4c9cc;
+
+    font-size: 9px;
+
+    margin-top: 1px;
+
+}
+
+.rank-kills {
+
+    margin-top: 10px;
+
+    color: #ffffff;
+
+    font-size: 13px;
+
+    font-weight: 800;
+
+}
+
+.rank-kills-label {
+
+    color: #aeb5b8;
+
+    font-size: 9px;
+
+}
+
+
+/* ==========================================================
+   TEAM / PLAYERS
+   ========================================================== */
+
+.players-area {
+
+    padding:
+        15px 12px
+        10px 12px;
+
+    min-width: 0;
+
+}
+
+
+.player-header {
+
+    display: grid;
+
+    grid-template-columns:
+        minmax(120px, 1fr)
+        55px
+        55px;
+
+    color: #727b80;
+
+    font-size: 8px;
+
+    margin-bottom: 4px;
+
+    text-transform: uppercase;
+
+}
+
+
+.player-row {
+
+    display: grid;
+
+    grid-template-columns:
+        minmax(120px, 1fr)
+        55px
+        55px;
+
+    height: 27px;
+
+    align-items: center;
+
+    border-bottom:
+        1px solid
+        rgba(
+            255,
+            255,
+            255,
+            0.05
+        );
+
+}
+
+
+.player-name {
+
+    color: #ffffff;
+
+    font-size: 13px;
+
+    font-weight: 800;
+
+    letter-spacing: 0.4px;
+
+}
+
+
+.player-avg {
+
+    color: #aab2b6;
+
+    font-size: 11px;
+
+    text-align: center;
+
+}
+
+
+.player-kills {
+
+    color: #dfe3e5;
+
+    font-size: 11px;
+
+    text-align: center;
+
+}
+
+
+/* ==========================================================
+   GAME AREA
+   ========================================================== */
+
+.games-area {
+
+    padding:
+        15px 10px
+        10px 10px;
+
+    overflow-x: auto;
+
+}
+
+
+/* ==========================================================
+   GAMES GRID
+   ========================================================== */
+
+.games-grid {
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(
+            var(--game-count),
+            minmax(
+                42px,
+                1fr
+            )
+        );
+
+    min-width:
+        calc(
+            var(--game-count) * 42px
+        );
+
+    gap: 3px;
+
+}
+
+
+/* ==========================================================
+   GAME HEADERS
+   ========================================================== */
+
+.game-header {
+
+    color: #727b80;
+
+    font-size: 8px;
+
+    text-align: center;
+
+    margin-bottom: 5px;
+
+}
+
+
+/* ==========================================================
+   GAME DATA
+   ========================================================== */
+
+.game-values {
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(
+            var(--game-count),
+            minmax(
+                42px,
+                1fr
+            )
+        );
+
+    gap: 3px;
+
+}
+
+
+.game-column {
+
+    min-width: 42px;
+
+    text-align: center;
+
+    color: #c8ced1;
+
+    font-size: 9px;
+
+}
+
+
+.game-position {
+
+    color: #f3f3f3;
+
+    font-size: 10px;
+
+    font-weight: 800;
+
+}
+
+
+.game-score {
+
+    margin-top: 4px;
+
+    color: #aeb7bb;
+
+    font-size: 9px;
+
+}
+
+
+/* ==========================================================
+   SUMMARY
+   ========================================================== */
+
+.summary-area {
+
+    grid-column:
+        2 / 4;
+
+    border-top:
+        1px solid
+        rgba(
+            255,
+            255,
+            255,
+            0.08
+        );
+
+    margin:
+        0 12px;
+
+    padding:
+        9px 0 10px;
+
+    display: grid;
+
+    grid-template-columns:
+        220px
+        1fr;
+
+    align-items: center;
+
+}
+
+
+.summary-team {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 10px;
+
+}
+
+
+.team-mark {
+
+    width: 40px;
+
+    height: 28px;
+
+    border-radius: 8px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    background:
+        var(--accent-bg);
+
+    color:
+        var(--accent);
+
+    font-size: 12px;
+
+    font-weight: 900;
+
+}
+
+
+.summary-values {
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(
+            var(--game-count),
+            minmax(
+                42px,
+                1fr
+            )
+        );
+
+    gap: 3px;
+
+}
+
+
+.summary-item {
+
+    text-align: center;
+
+    font-size: 9px;
+
+    color: #9ca5a9;
+
+}
+
+
+.summary-label {
+
+    color: #ffffff;
+
+    font-weight: 800;
+
+    font-size: 9px;
+
+}
+
+
+/* ==========================================================
+   DUPLICATE
+   ========================================================== */
+
+.duplicate-pos {
+
+    color: #ff4d4d !important;
+
+    font-weight: 900;
+
+    text-shadow:
+        0 0 6px
+        rgba(
+            255,
+            50,
+            50,
+            0.7
+        );
+
+}
+
+
+/* ==========================================================
+   FRAGGER SECTION
+   ========================================================== */
+
+.section-title {
+
+    margin:
+        32px 0 12px;
+
+    text-align: center;
 
     font-family:
         "Arial Black",
         Arial,
         sans-serif;
 
-    font-size: clamp(
-        30px,
-        4vw,
-        58px
-    );
+    font-size: 24px;
 
-    font-weight: 900;
+    letter-spacing: 3px;
 
-    letter-spacing: 5px;
+    color: #ffffff;
+
+    text-shadow:
+        0 0 10px
+        rgba(
+            255,
+            20,
+            147,
+            0.55
+        );
+
+}
+
+
+/* ==========================================================
+   FRAGGER CARD
+   ========================================================== */
+
+.fragger-card {
+
+    background:
+        linear-gradient(
+            135deg,
+            #20282b,
+            #171d20
+        );
+
+    border:
+        1px solid
+        rgba(
+            255,
+            255,
+            255,
+            0.06
+        );
+
+    border-radius: 16px;
+
+    overflow: hidden;
+
+    box-shadow:
+        0 7px 20px
+        rgba(
+            0,
+            0,
+            0,
+            0.55
+        );
+
+}
+
+
+.fragger-row {
+
+    display: grid;
+
+    grid-template-columns:
+        55px
+        minmax(
+            180px,
+            1fr
+        )
+        minmax(
+            160px,
+            1fr
+        )
+        90px;
+
+    min-height: 39px;
+
+    align-items: center;
+
+    padding:
+        0 15px;
+
+    border-bottom:
+        1px solid
+        rgba(
+            255,
+            255,
+            255,
+            0.045
+        );
+
+}
+
+
+.fragger-row.header {
+
+    min-height: 32px;
+
+    color: #777f83;
+
+    font-size: 9px;
 
     text-transform: uppercase;
 
-    color: #ffffff;
-
-    text-shadow:
-        0 0 5px #ffffff,
-        0 0 12px #a855f7,
-        0 0 25px #a855f7,
-        0 0 45px #7c3aed;
-
 }
 
-/* ==========================================================
-   TABLE CONTAINER
-   ========================================================== */
 
-.table-wrap {
+.fragger-pos {
 
-    width: 100%;
-
-    overflow-x: auto;
-
-    padding: 8px 5px 15px 5px;
-
-}
-
-/* ==========================================================
-   TABLE
-   ========================================================== */
-
-table {
-
-    border-collapse: separate;
-
-    border-spacing: 5px;
-
-    width: max-content;
-
-    min-width: 100%;
-
-}
-
-/* ==========================================================
-   CELLS
-   ========================================================== */
-
-th,
-td {
-
-    border: 1px solid rgba(
-        168,
-        85,
-        247,
-        0.55
-    );
-
-    border-radius: 8px;
-
-    padding: 5px 7px;
-
-    text-align: center;
-
-    white-space: nowrap;
-
-    font-weight: 700;
-
-}
-
-/* ==========================================================
-   HEADERS
-   ========================================================== */
-
-th {
-
-    background:
-        linear-gradient(
-            145deg,
-            #6d28d9,
-            #3b0764
-        );
-
-    color: #ffffff;
-
-    font-size: 11px;
-
-    letter-spacing: 0.6px;
-
-    box-shadow:
-        0 3px 10px rgba(
-            168,
-            85,
-            247,
-            0.35
-        );
-
-}
-
-/* ==========================================================
-   NORMAL CELLS
-   ========================================================== */
-
-td {
-
-    background:
-        linear-gradient(
-            145deg,
-            #17121f,
-            #0d0a12
-        );
-
-    font-size: 11px;
-
-    box-shadow:
-        0 3px 9px rgba(
-            0,
-            0,
-            0,
-            0.75
-        ),
-        0 0 5px rgba(
-            168,
-            85,
-            247,
-            0.10
-        );
-
-    transition:
-        transform 0.15s ease,
-        box-shadow 0.15s ease;
-
-}
-
-/* ==========================================================
-   FLOATING EFFECT
-   ========================================================== */
-
-tbody tr:hover td {
-
-    transform:
-        translateY(-2px);
-
-    box-shadow:
-        0 7px 16px rgba(
-            0,
-            0,
-            0,
-            0.9
-        ),
-        0 0 10px rgba(
-            168,
-            85,
-            247,
-            0.40
-        );
-
-}
-
-/* ==========================================================
-   TEAM COLUMN
-   ========================================================== */
-
-td:nth-child(2) {
-
-    color: #e9d5ff;
-
-    font-size: 12px;
-
-    letter-spacing: 0.3px;
-
-}
-
-/* ==========================================================
-   POS
-   ========================================================== */
-
-td:first-child {
-
-    color: #d8b4fe;
-
-    font-size: 12px;
-
-    min-width: 42px;
-
-}
-
-/* ==========================================================
-   DUPLICATE POSITIONS
-   ========================================================== */
-
-.duplicate-pos {
-
-    background:
-        linear-gradient(
-            145deg,
-            #7f1d1d,
-            #450a0a
-        ) !important;
-
-    color: #ffffff !important;
-
-    border-color: #ef4444 !important;
-
-    box-shadow:
-        0 0 8px rgba(
-            239,
-            68,
-            68,
-            0.75
-        ) !important;
-
-}
-
-/* ==========================================================
-   SECTION TITLES
-   ========================================================== */
-
-.section-title {
-
-    margin-top: 35px;
-
-    margin-bottom: 5px;
-
-    text-align: center;
-
-    font-size: 21px;
-
-    letter-spacing: 2px;
-
-    color: #e9d5ff;
-
-    text-shadow:
-        0 0 8px #a855f7,
-        0 0 18px #7c3aed;
-
-}
-
-/* ==========================================================
-   FRAGGER
-   ========================================================== */
-
-.fragger-table th {
-
-    background:
-        linear-gradient(
-            145deg,
-            #9333ea,
-            #4c1d95
-        );
-
-}
-
-.fragger-table td {
-
-    font-size: 12px;
-
-}
-
-.fragger-table td:nth-child(2) {
-
-    color: #f5d0fe;
+    font-size: 14px;
 
     font-weight: 900;
 
 }
+
+
+.fragger-player {
+
+    color: #ffffff;
+
+    font-size: 12px;
+
+    font-weight: 900;
+
+}
+
+
+.fragger-team {
+
+    color: #9fa7ab;
+
+    font-size: 11px;
+
+}
+
+
+.fragger-kills {
+
+    color: #ffffff;
+
+    font-size: 13px;
+
+    font-weight: 900;
+
+    text-align: right;
+
+}
+
+
+/* ==========================================================
+   TOP 3 FRAGGER COLORS
+   ========================================================== */
+
+.fragger-row:nth-child(2)
+.fragger-pos {
+
+    color: #ffd21a;
+
+}
+
+.fragger-row:nth-child(3)
+.fragger-pos {
+
+    color: #8ee600;
+
+}
+
+.fragger-row:nth-child(4)
+.fragger-pos {
+
+    color: #ff1493;
+
+}
+
 
 /* ==========================================================
    SCROLLBAR
    ========================================================== */
 
-.table-wrap::-webkit-scrollbar {
+.games-area::-webkit-scrollbar {
 
-    height: 7px;
+    height: 5px;
 
 }
 
-.table-wrap::-webkit-scrollbar-track {
+.games-area::-webkit-scrollbar-track {
 
-    background: #09070d;
+    background: #111618;
+
+}
+
+.games-area::-webkit-scrollbar-thumb {
+
+    background: #596166;
 
     border-radius: 10px;
 
 }
 
-.table-wrap::-webkit-scrollbar-thumb {
-
-    background:
-        linear-gradient(
-            90deg,
-            #7c3aed,
-            #d946ef
-        );
-
-    border-radius: 10px;
-
-}
 
 /* ==========================================================
-   MOBILE
+   RESPONSIVE
    ========================================================== */
 
-@media (max-width: 800px) {
+@media (
+    max-width: 1000px
+) {
 
     body {
 
-        padding: 8px;
+        padding:
+            10px 6px 30px;
 
     }
 
-    .title {
+    .rank-card {
 
-        font-size: 29px;
+        grid-template-columns:
+            70px
+            220px
+            minmax(
+                430px,
+                1fr
+            );
+
+    }
+
+    .player-name {
+
+        font-size: 11px;
+
+    }
+
+}
+
+
+@media (
+    max-width: 700px
+) {
+
+    .main-title {
+
+        font-size: 30px;
 
         letter-spacing: 3px;
 
-        margin-bottom: 12px;
+    }
+
+    .rank-card {
+
+        grid-template-columns:
+            70px
+            210px
+            minmax(
+                420px,
+                1fr
+            );
+
+        min-height: 170px;
 
     }
 
-    table {
+    .rank-number {
 
-        border-spacing: 3px;
-
-    }
-
-    th,
-    td {
-
-        padding: 4px 5px;
-
-        font-size: 9px;
+        font-size: 32px;
 
     }
 
-    td:nth-child(2) {
+    .player-row {
+
+        height: 25px;
+
+    }
+
+    .player-name {
 
         font-size: 10px;
 
     }
 
-    .section-title {
+    .player-avg,
+    .player-kills {
 
-        font-size: 18px;
+        font-size: 9px;
+
+    }
+
+    .fragger-row {
+
+        grid-template-columns:
+            45px
+            minmax(
+                140px,
+                1fr
+            )
+            minmax(
+                120px,
+                1fr
+            )
+            60px;
+
+        padding:
+            0 9px;
 
     }
 
@@ -1038,218 +1764,445 @@ td:first-child {
 
 <body>
 
-<div class="title">
-TORNEOS MANYN
+
+<div class="main-title">
+
+    TORNEOS MANYN
+
 </div>
 
 """
 
+
     # ========================================================
-    # GENERAL TABLE
+    # RANK CARDS
     # ========================================================
 
-    html += """
-<div class="table-wrap">
+    for pos, r in enumerate(
+        ranking,
+        start=1
+    ):
 
-<table>
+        if pos == 1:
 
-<thead>
+            rank_class = "top1"
+            label = "WINNERS"
 
-<tr>
+        elif pos == 2:
 
-<th>POS</th>
+            rank_class = "top2"
+            label = "MATCH POINT"
 
-<th>TEAM</th>
+        elif pos == 3:
 
-"""
+            rank_class = "top3"
+            label = "TOP 3"
 
-    for g in allgames:
+        else:
 
-        color = (
-            game_colors[
-                int(g) % len(game_colors)
-            ]
-            if str(g).isdigit()
-            else "#9333ea"
-        )
-
-        html += (
-
-            f"<th style='background:"
-            f"linear-gradient(145deg,"
-            f"{color},#26063d);'>"
-            f"GAME {g}"
-            f"</th>"
-
-            f"<th style='background:"
-            f"linear-gradient(145deg,"
-            f"{color},#26063d);'>"
-            f"POS"
-            f"</th>"
-
-            f"<th style='background:"
-            f"linear-gradient(145deg,"
-            f"{color},#26063d);'>"
-            f"SCORE"
-            f"</th>"
-
-        )
-
-    html += """
-
-<th>TOTAL</th>
-
-<th>KILLS</th>
-
-</tr>
-
-</thead>
-
-<tbody>
-
-"""
-
-    pos = 1
-
-    for r in ranking:
+            rank_class = "other"
+            label = "RANKING"
 
         medal = (
 
             "🥇"
             if pos == 1
-            else "🥈"
+            else
+            "🥈"
             if pos == 2
-            else "🥉"
+            else
+            "🥉"
             if pos == 3
-            else ""
+            else
+            ""
 
         )
 
-        html += (
+        html += f"""
 
-            f"<tr>"
+<div
+    class="rank-card {rank_class}"
+    style="--game-count:{max(len(allgames), 1)};"
+>
 
-            f"<td>"
-            f"{medal} {pos}"
-            f"</td>"
 
-            f"<td>"
-            f"{r['team']}"
-            f"</td>"
+    <!-- RANK -->
 
+    <div class="rank-box">
+
+        <div class="rank-label">
+
+            {label}
+
+        </div>
+
+        <div class="rank-number">
+
+            {medal} {pos}
+
+        </div>
+
+        <div class="rank-points">
+
+            {r["score"]}
+
+        </div>
+
+        <div class="rank-points-label">
+
+            Points
+
+        </div>
+
+        <div class="rank-kills">
+
+            {r["kills"]}
+
+        </div>
+
+        <div class="rank-kills-label">
+
+            Kills
+
+        </div>
+
+    </div>
+
+
+    <!-- PLAYERS -->
+
+    <div class="players-area">
+
+        <div class="player-header">
+
+            <div>PLAYER</div>
+            <div>AVG KILLS</div>
+            <div>KILLS</div>
+
+        </div>
+
+"""
+
+        # Get players from all games
+        player_stats = {}
+
+        for g, info in r["games"].items():
+
+            for p, k in info.get(
+                "players",
+                {}
+            ).items():
+
+                if isinstance(
+                    k,
+                    dict
+                ):
+
+                    k = k.get(
+                        "kills",
+                        0
+                    )
+
+                if p not in player_stats:
+
+                    player_stats[p] = {
+                        "kills": 0,
+                        "games": 0
+                    }
+
+                player_stats[p]["kills"] += int(k)
+                player_stats[p]["games"] += 1
+
+        sorted_players = sorted(
+            player_stats.items(),
+            key=lambda x: x[1]["kills"],
+            reverse=True
         )
+
+        for p, stats in sorted_players[:3]:
+
+            avg = (
+                stats["kills"]
+                /
+                stats["games"]
+                if stats["games"]
+                else 0
+            )
+
+            html += f"""
+
+        <div class="player-row">
+
+            <div class="player-name">
+
+                {p}
+
+            </div>
+
+            <div class="player-avg">
+
+                {avg:.1f}
+
+            </div>
+
+            <div class="player-kills">
+
+                {stats["kills"]}
+
+            </div>
+
+        </div>
+
+"""
+
+        # ====================================================
+        # GAMES
+        # ====================================================
+
+        html += """
+
+    </div>
+
+
+    <div class="games-area">
+
+        <div class="game-header">
+
+"""
 
         for g in allgames:
 
-            if g in r["games"]:
+            html += f"""
 
-                game = r["games"][g]
+            <span>
 
-                cls = ""
+                M{g}
+
+            </span>
+
+"""
+
+        html += """
+
+        </div>
+
+
+        <div class="game-values">
+
+"""
+
+        for g in allgames:
+
+            info = r["games"].get(
+                g
+            )
+
+            if info:
+
+                placement = info.get(
+                    "placement",
+                    "-"
+                )
+
+                score = info.get(
+                    "score",
+                    0
+                )
+
+                duplicate = ""
 
                 if (
-                    g in posiciones_por_game
-                    and posiciones_por_game[g].get(
-                        game["placement"],
+                    posiciones_por_game
+                    .get(g, {})
+                    .get(
+                        placement,
                         0
                     ) > 1
                 ):
 
-                    cls = "duplicate-pos"
-
-                players_txt = ""
-
-                for p, k in game["players"].items():
-
-                    players_txt += (
-                        f"{p}: {k}<br>"
+                    duplicate = (
+                        "duplicate-pos"
                     )
 
-                html += (
+                html += f"""
 
-                    f"<td>"
-                    f"{players_txt}"
-                    f"</td>"
+            <div class="game-column">
 
-                    f"<td class='{cls}'>"
-                    f"{game['placement']}"
-                    f"</td>"
+                <div class="game-position {duplicate}">
 
-                    f"<td>"
-                    f"{game['score']}"
-                    f"</td>"
+                    {placement}
 
-                )
+                </div>
+
+                <div class="game-score">
+
+                    {score}
+
+                </div>
+
+            </div>
+
+"""
 
             else:
 
-                html += (
+                html += """
 
-                    "<td>-</td>"
-                    "<td>-</td>"
-                    "<td>-</td>"
+            <div class="game-column">
 
-                )
+                <div class="game-position">
 
-        html += (
+                    -
 
-            f"<td>"
-            f"{r['score']}"
-            f"</td>"
+                </div>
 
-            f"<td>"
-            f"{r['kills']}"
-            f"</td>"
+                <div class="game-score">
 
-            f"</tr>"
+                    -
 
-        )
+                </div>
 
-        pos += 1
+            </div>
 
-    html += """
+"""
 
-</tbody>
+        html += """
 
-</table>
+        </div>
+
+    </div>
+
+
+    <!-- SUMMARY -->
+
+    <div class="summary-area">
+
+        <div class="summary-team">
+
+            <div class="team-mark">
+
+                M
+
+            </div>
+
+            <div>
+
+                <div
+                    style="
+                    color:#ffffff;
+                    font-weight:900;
+                    font-size:11px;
+                    "
+                >
+
+                    TOTAL
+
+                </div>
+
+                <div
+                    style="
+                    color:#8f989c;
+                    font-size:9px;
+                    "
+                >
+
+                    RESULTADO GENERAL
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="summary-values">
+
+"""
+
+        for g in allgames:
+
+            info = r["games"].get(
+                g
+            )
+
+            if info:
+
+                html += f"""
+
+            <div class="summary-item">
+
+                <div class="summary-label">
+
+                    {info.get(
+                        "kills",
+                        0
+                    )}
+
+                </div>
+
+                <div>
+
+                    Kills
+
+                </div>
+
+            </div>
+
+"""
+
+            else:
+
+                html += """
+
+            <div class="summary-item">
+
+                -
+
+            </div>
+
+"""
+
+        html += """
+
+        </div>
+
+    </div>
 
 </div>
 
 """
 
+
     # ========================================================
-    # FRAGGER TABLE
+    # FRAGGER
     # ========================================================
 
     html += """
 
 <div class="section-title">
 
-🔥 FRAGGER TABLE
+    🔥 FRAGGER TABLE
 
 </div>
 
-<div class="table-wrap">
 
-<table class="fragger-table">
+<div class="fragger-card">
 
-<thead>
 
-<tr>
+    <div class="fragger-row header">
 
-<th>POS</th>
+        <div>POS</div>
 
-<th>PLAYER</th>
+        <div>PLAYER</div>
 
-<th>TEAM</th>
+        <div>TEAM</div>
 
-<th>KILLS</th>
+        <div style="text-align:right;">
 
-</tr>
+            KILLS
 
-</thead>
+        </div>
 
-<tbody>
+    </div>
 
 """
 
@@ -1261,47 +2214,55 @@ TORNEOS MANYN
 
             "🥇"
             if ppos == 1
-            else "🥈"
+            else
+            "🥈"
             if ppos == 2
-            else "🥉"
+            else
+            "🥉"
             if ppos == 3
-            else ""
+            else
+            ""
 
         )
 
-        html += (
+        html += f"""
 
-            f"<tr>"
+    <div class="fragger-row">
 
-            f"<td>"
-            f"{medal} {ppos}"
-            f"</td>"
+        <div class="fragger-pos">
 
-            f"<td>"
-            f"{p}"
-            f"</td>"
+            {medal} {ppos}
 
-            f"<td>"
-            f"{s['team']}"
-            f"</td>"
+        </div>
 
-            f"<td>"
-            f"{s['kills']}"
-            f"</td>"
+        <div class="fragger-player">
 
-            f"</tr>"
+            {p}
 
-        )
+        </div>
+
+        <div class="fragger-team">
+
+            {s["team"]}
+
+        </div>
+
+        <div class="fragger-kills">
+
+            {s["kills"]}
+
+        </div>
+
+    </div>
+
+"""
 
         ppos += 1
 
     html += """
 
-</tbody>
-
-</table>
-
 </div>
+
 
 </body>
 
