@@ -70,10 +70,7 @@ def save(data):
 # SCORE SYSTEM
 # ============================================================
 
-def calcular_score(
-    placement,
-    kills
-):
+def calcular_score(placement, kills):
 
     if placement == 1:
 
@@ -109,7 +106,7 @@ def report():
 
     try:
 
-        body = request.json
+        body = request.json or {}
 
         team = str(
             body.get(
@@ -141,6 +138,20 @@ def report():
             "kills",
             []
         )
+
+        if not team:
+
+            return jsonify({
+                "ok": False,
+                "error": "equipo vacío"
+            }), 400
+
+        if not game:
+
+            return jsonify({
+                "ok": False,
+                "error": "game vacío"
+            }), 400
 
         db = load()
 
@@ -212,7 +223,7 @@ def modificar():
 
     try:
 
-        body = request.json
+        body = request.json or {}
 
         team = str(
             body.get(
@@ -250,12 +261,14 @@ def modificar():
         if team not in db["equipos"]:
 
             return jsonify({
+                "ok": False,
                 "error": "equipo no existe"
             }), 400
 
         if game not in db["equipos"][team]["games"]:
 
             return jsonify({
+                "ok": False,
                 "error": "partida no existe"
             }), 400
 
@@ -310,7 +323,7 @@ def modificar():
 
 
 # ============================================================
-# DELETE
+# DELETE ALL
 # ============================================================
 
 @app.route(
@@ -319,15 +332,27 @@ def modificar():
 )
 def borrar():
 
-    db = load()
+    try:
 
-    db["equipos"] = {}
+        db = load()
 
-    save(db)
+        db["equipos"] = {}
 
-    return jsonify({
-        "ok": True
-    })
+        save(db)
+
+        return jsonify({
+            "ok": True
+        })
+
+    except Exception as e:
+
+        print("ERROR en /borrar:")
+        print(e)
+
+        return jsonify({
+            "ok": False,
+            "error": str(e)
+        }), 400
 
 
 # ============================================================
@@ -343,6 +368,7 @@ def home():
         "equipos",
         {}
     )
+
 
     # ========================================================
     # ALL GAMES
@@ -526,16 +552,20 @@ def home():
     box-sizing: border-box;
 }
 
-html {
-    width: 100%;
-    min-width: 100%;
-}
-
+html,
 body {
+
+    width: 100%;
+
+    min-width: 100%;
 
     margin: 0;
 
-    padding: 25px;
+    padding: 0;
+
+}
+
+body {
 
     background:
         radial-gradient(
@@ -552,27 +582,30 @@ body {
         Helvetica,
         sans-serif;
 
-    overflow-x: hidden;
+    overflow-x: auto;
 
     -webkit-text-size-adjust: 100%;
 
     text-size-adjust: 100%;
+
 }
 
 
 /* =========================================================
-   MAIN CONTAINER
+   MAIN
    ========================================================= */
 
 .main-container {
 
     width: 100%;
 
-    max-width: 1500px;
-
     min-width: 1100px;
 
+    max-width: 1500px;
+
     margin: 0 auto;
+
+    padding: 25px;
 
 }
 
@@ -599,7 +632,7 @@ body {
 
 
 /* =========================================================
-   RANK BOX
+   RANK CARD
    ========================================================= */
 
 .rank-box {
@@ -611,8 +644,6 @@ body {
     height: 145px;
 
     margin-top: 25px;
-
-    padding: 20px;
 
     border-radius: 18px;
 
@@ -631,10 +662,6 @@ body {
 
 }
 
-
-/* =========================================================
-   RANK LABEL
-   ========================================================= */
 
 .rank-label {
 
@@ -655,10 +682,6 @@ body {
 }
 
 
-/* =========================================================
-   RANK NUMBER
-   ========================================================= */
-
 .rank-number {
 
     position: absolute;
@@ -676,10 +699,6 @@ body {
 }
 
 
-/* =========================================================
-   POINTS
-   ========================================================= */
-
 .rank-points {
 
     position: absolute;
@@ -688,15 +707,15 @@ body {
 
     top: 40px;
 
+    width: 100px;
+
+    text-align: center;
+
     font-size: 34px;
 
     font-weight: 1000;
 
     color: #dfff00;
-
-    text-align: center;
-
-    width: 100px;
 
 }
 
@@ -722,10 +741,6 @@ body {
 }
 
 
-/* =========================================================
-   KILLS
-   ========================================================= */
-
 .rank-kills {
 
     position: absolute;
@@ -734,15 +749,15 @@ body {
 
     top: 40px;
 
+    width: 80px;
+
+    text-align: center;
+
     font-size: 34px;
 
     font-weight: 1000;
 
     color: #39ff14;
-
-    text-align: center;
-
-    width: 80px;
 
 }
 
@@ -769,12 +784,65 @@ body {
 
 
 /* =========================================================
+   TOP 1
+   ========================================================= */
+
+.top1 {
+
+    border-color: #dfff00;
+
+    box-shadow:
+        0 0 18px rgba(223,255,0,.12),
+        0 12px 25px rgba(0,0,0,.45);
+
+}
+
+
+.top1 .rank-label {
+
+    color: #dfff00;
+
+}
+
+
+/* =========================================================
+   TOP 2
+   ========================================================= */
+
+.top2 {
+
+    border-color: #c8c8c8;
+
+}
+
+
+/* =========================================================
+   TOP 3
+   ========================================================= */
+
+.top3 {
+
+    border-color: #cd7f32;
+
+}
+
+
+.top3 .rank-label {
+
+    color: #cd7f32;
+
+}
+
+
+/* =========================================================
    PLAYERS
    ========================================================= */
 
 .players-area {
 
     margin-top: 10px;
+
+    width: 100%;
 
     border-radius: 12px;
 
@@ -804,7 +872,7 @@ body {
 
 .player-header {
 
-    height: 34px;
+    min-height: 34px;
 
     align-items: center;
 
@@ -848,6 +916,8 @@ body {
 
 
 .player-name {
+
+    min-width: 0;
 
     padding-left: 15px;
 
@@ -921,7 +991,7 @@ body {
     grid-template-columns:
         repeat(
             var(--games-count),
-            1fr
+            minmax(0, 1fr)
         );
 
     width: 100%;
@@ -942,13 +1012,13 @@ body {
 
 .game-header span {
 
+    min-width: 0;
+
     display: flex;
 
     align-items: center;
 
     justify-content: center;
-
-    min-width: 0;
 
     font-size: 13px;
 
@@ -1031,6 +1101,9 @@ body {
 
     color: #ff3131 !important;
 
+    text-shadow:
+        0 0 7px rgba(255,49,49,.45);
+
 }
 
 
@@ -1110,7 +1183,7 @@ body {
     grid-template-columns:
         repeat(
             var(--games-count),
-            1fr
+            minmax(0, 1fr)
         );
 
     width: 100%;
@@ -1119,6 +1192,8 @@ body {
 
 
 .summary-item {
+
+    min-width: 0;
 
     display: flex;
 
@@ -1299,89 +1374,16 @@ body {
 
 
 /* =========================================================
-   TOP 1
-   ========================================================= */
-
-.top1 {
-
-    border-color: #dfff00;
-
-    box-shadow:
-        0 0 18px rgba(223,255,0,.12),
-        0 12px 25px rgba(0,0,0,.45);
-
-}
-
-
-.top1 .rank-label {
-
-    color: #dfff00;
-
-}
-
-
-/* =========================================================
-   TOP 2
-   ========================================================= */
-
-.top2 {
-
-    border-color: #c8c8c8;
-
-}
-
-
-.top2 .rank-label {
-
-    display: none;
-
-}
-
-
-/* =========================================================
-   TOP 3
-   ========================================================= */
-
-.top3 {
-
-    border-color: #cd7f32;
-
-}
-
-
-.top3 .rank-label {
-
-    color: #cd7f32;
-
-}
-
-
-/* =========================================================
-   OTHER
-   ========================================================= */
-
-.other {
-
-    border-color: #343b3e;
-
-}
-
-
-/* =========================================================
-   NO ZOOM / FIXED STRUCTURE
+   MOBILE / SMALL SCREEN
    ========================================================= */
 
 @media (max-width: 900px) {
 
-    body {
-
-        padding: 10px;
-
-    }
-
     .main-container {
 
         min-width: 1100px;
+
+        padding: 15px;
 
     }
 
@@ -1404,59 +1406,64 @@ TORNEOS MANYN
 """
 
 
-# ============================================================
-# RANK CARDS
-# ============================================================
+    # ========================================================
+    # RANK CARDS
+    # ========================================================
 
-for pos, r in enumerate(
-    ranking,
-    start=1
-):
+    for pos, r in enumerate(
+        ranking,
+        start=1
+    ):
 
-    if pos == 1:
+        if pos == 1:
 
-        rank_class = "top1"
-        label = "WINNERS"
+            rank_class = "top1"
+            label = "WINNERS"
 
-    elif pos == 2:
+        elif pos == 2:
 
-        rank_class = "top2"
-        label = ""
+            rank_class = "top2"
 
-    elif pos == 3:
+            # IMPORTANTE:
+            # EL PUESTO 2 NO TIENE TEXTO.
+            # SOLO SE MUESTRA LA MEDALLA.
 
-        rank_class = "top3"
-        label = "TOP 3"
+            label = ""
 
-    else:
+        elif pos == 3:
 
-        rank_class = "other"
-        label = "RANKING"
+            rank_class = "top3"
+            label = "TOP 3"
 
+        else:
 
-    medal = (
-
-        "🥇"
-        if pos == 1
-
-        else
-
-        "🥈"
-        if pos == 2
-
-        else
-
-        "🥉"
-        if pos == 3
-
-        else
-
-        ""
-
-    )
+            rank_class = "other"
+            label = "RANKING"
 
 
-    html += f"""
+        medal = (
+
+            "🥇"
+            if pos == 1
+
+            else
+
+            "🥈"
+            if pos == 2
+
+            else
+
+            "🥉"
+            if pos == 3
+
+            else
+
+            ""
+
+        )
+
+
+        html += f"""
 
 <div class="rank-box {rank_class}">
 
@@ -1514,65 +1521,65 @@ for pos, r in enumerate(
 """
 
 
-    # ========================================================
-    # PLAYERS
-    # ========================================================
+        # ====================================================
+        # PLAYER STATS
+        # ====================================================
 
-    player_stats = {}
-
-
-    for g, info in r["games"].items():
-
-        for p, k in info.get(
-            "players",
-            {}
-        ).items():
-
-            if isinstance(
-                k,
-                dict
-            ):
-
-                k = k.get(
-                    "kills",
-                    0
-                )
-
-            if p not in player_stats:
-
-                player_stats[p] = {
-                    "kills": 0,
-                    "games": 0
-                }
-
-            player_stats[p]["kills"] += int(k)
-
-            player_stats[p]["games"] += 1
+        player_stats = {}
 
 
-    sorted_players = sorted(
-        player_stats.items(),
-        key=lambda x: x[1]["kills"],
-        reverse=True
-    )
+        for g, info in r["games"].items():
+
+            for p, k in info.get(
+                "players",
+                {}
+            ).items():
+
+                if isinstance(
+                    k,
+                    dict
+                ):
+
+                    k = k.get(
+                        "kills",
+                        0
+                    )
+
+                if p not in player_stats:
+
+                    player_stats[p] = {
+                        "kills": 0,
+                        "games": 0
+                    }
+
+                player_stats[p]["kills"] += int(k)
+
+                player_stats[p]["games"] += 1
 
 
-    for p, stats in sorted_players[:3]:
-
-        avg = (
-
-            stats["kills"]
-            /
-            stats["games"]
-
-            if stats["games"]
-
-            else 0
-
+        sorted_players = sorted(
+            player_stats.items(),
+            key=lambda x: x[1]["kills"],
+            reverse=True
         )
 
 
-        html += f"""
+        for p, stats in sorted_players[:3]:
+
+            avg = (
+
+                stats["kills"]
+                /
+                stats["games"]
+
+                if stats["games"]
+
+                else 0
+
+            )
+
+
+            html += f"""
 
     <div class="player-row">
 
@@ -1599,19 +1606,20 @@ for pos, r in enumerate(
 """
 
 
-    # ========================================================
-    # GAMES
-    # ========================================================
+        # ====================================================
+        # GAMES
+        # ====================================================
 
-    games_count = max(
-        len(allgames),
-        1
-    )
+        games_count = max(
+            len(allgames),
+            1
+        )
 
 
-    html += f"""
+        html += f"""
 
 </div>
+
 
 <div class="games-area">
 
@@ -1623,9 +1631,9 @@ for pos, r in enumerate(
 """
 
 
-    for g in allgames:
+        for g in allgames:
 
-        html += f"""
+            html += f"""
 
         <span>
 
@@ -1636,9 +1644,10 @@ for pos, r in enumerate(
 """
 
 
-    html += f"""
+        html += f"""
 
     </div>
+
 
     <div
         class="game-values"
@@ -1648,46 +1657,46 @@ for pos, r in enumerate(
 """
 
 
-    for g in allgames:
+        for g in allgames:
 
-        info = r["games"].get(
-            g
-        )
-
-
-        if info:
-
-            placement = info.get(
-                "placement",
-                "-"
+            info = r["games"].get(
+                g
             )
 
-            score = info.get(
-                "score",
-                0
-            )
 
-            duplicate = ""
+            if info:
 
-
-            if (
-
-                posiciones_por_game
-                .get(
-                    g,
-                    {}
+                placement = info.get(
+                    "placement",
+                    "-"
                 )
-                .get(
-                    placement,
+
+                score = info.get(
+                    "score",
                     0
-                ) > 1
+                )
 
-            ):
-
-                duplicate = "duplicate-pos"
+                duplicate = ""
 
 
-            html += f"""
+                if (
+
+                    posiciones_por_game
+                    .get(
+                        g,
+                        {}
+                    )
+                    .get(
+                        placement,
+                        0
+                    ) > 1
+
+                ):
+
+                    duplicate = "duplicate-pos"
+
+
+                html += f"""
 
         <div class="game-column">
 
@@ -1708,9 +1717,9 @@ for pos, r in enumerate(
 """
 
 
-        else:
+            else:
 
-            html += """
+                html += """
 
         <div class="game-column">
 
@@ -1731,11 +1740,11 @@ for pos, r in enumerate(
 """
 
 
-    # ========================================================
-    # SUMMARY
-    # ========================================================
+        # ====================================================
+        # SUMMARY
+        # ====================================================
 
-    html += f"""
+        html += f"""
 
     </div>
 
@@ -1781,6 +1790,7 @@ for pos, r in enumerate(
 
     </div>
 
+
     <div
         class="summary-values"
         style="--games-count:{games_count};"
@@ -1789,16 +1799,16 @@ for pos, r in enumerate(
 """
 
 
-    for g in allgames:
+        for g in allgames:
 
-        info = r["games"].get(
-            g
-        )
+            info = r["games"].get(
+                g
+            )
 
 
-        if info:
+            if info:
 
-            html += f"""
+                html += f"""
 
         <div class="summary-item">
 
@@ -1822,9 +1832,9 @@ for pos, r in enumerate(
 """
 
 
-        else:
+            else:
 
-            html += """
+                html += """
 
         <div class="summary-item">
 
@@ -1845,7 +1855,7 @@ for pos, r in enumerate(
 """
 
 
-    html += """
+        html += """
 
     </div>
 
@@ -1854,11 +1864,11 @@ for pos, r in enumerate(
 """
 
 
-# ============================================================
-# FRAGGER TABLE
-# ============================================================
+    # ========================================================
+    # FRAGGER TABLE
+    # ========================================================
 
-html += """
+    html += """
 
 <div class="fragger-container">
 
@@ -1868,13 +1878,26 @@ html += """
 
     </div>
 
+
     <div class="fragger-row header">
 
-        <div>POS</div>
+        <div>
 
-        <div>PLAYER</div>
+            POS
 
-        <div>TEAM</div>
+        </div>
+
+        <div>
+
+            PLAYER
+
+        </div>
+
+        <div>
+
+            TEAM
+
+        </div>
 
         <div style="text-align:right;">
 
@@ -1887,34 +1910,34 @@ html += """
 """
 
 
-ppos = 1
+    ppos = 1
 
 
-for p, s in fraggers:
+    for p, s in fraggers:
 
-    medal = (
+        medal = (
 
-        "🥇"
-        if ppos == 1
+            "🥇"
+            if ppos == 1
 
-        else
+            else
 
-        "🥈"
-        if ppos == 2
+            "🥈"
+            if ppos == 2
 
-        else
+            else
 
-        "🥉"
-        if ppos == 3
+            "🥉"
+            if ppos == 3
 
-        else
+            else
 
-        ""
+            ""
 
-    )
+        )
 
 
-    html += f"""
+        html += f"""
 
 <div class="fragger-row">
 
@@ -1947,10 +1970,10 @@ for p, s in fraggers:
 """
 
 
-    ppos += 1
+        ppos += 1
 
 
-html += """
+    html += """
 
 </div>
 
@@ -1963,7 +1986,12 @@ html += """
 """
 
 
-return html
+    # ========================================================
+    # MUY IMPORTANTE:
+    # return html está DENTRO de home()
+    # ========================================================
+
+    return html
 
 
 # ============================================================
