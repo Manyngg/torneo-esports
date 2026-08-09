@@ -523,7 +523,7 @@ def home():
 
 
     # ========================================================
-    # HTML
+    # HTML + CSS
     # ========================================================
 
     html = """
@@ -547,7 +547,7 @@ content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable
 <style>
 
 /* ============================================================
-   BASE
+   RESET
    ============================================================ */
 
 * {
@@ -556,49 +556,222 @@ content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable
 
 html,
 body {
-
     margin: 0;
     padding: 0;
-
     width: 100%;
+}
+
+body {
+
+    background: #f2eee6;
+
+    color: #ffffff;
+
+    font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
 
     overflow-x: hidden;
 
 }
 
-body {
 
-    font-family: Arial, Helvetica, sans-serif;
+/* ============================================================
+   CONTENEDOR
+   ============================================================ */
+
+.container {
+
+    width: 100%;
+
+    max-width: 1200px;
+
+    margin: 0 auto;
+
+    padding: 10px;
 
 }
 
 
 /* ============================================================
-   RANK LABEL
+   TITULO
+   ============================================================ */
+
+.title {
+
+    text-align: center;
+
+    font-size: 25px;
+
+    font-weight: 1000;
+
+    letter-spacing: 1px;
+
+    color: #111111;
+
+    margin-bottom: 10px;
+
+}
+
+
+/* ============================================================
+   TARJETA DE EQUIPO
+   ============================================================ */
+
+.rank-card {
+
+    width: 100%;
+
+    margin-bottom: 9px;
+
+    padding: 7px;
+
+    background: #e6e6e6;
+
+    border-radius: 16px;
+
+    box-shadow:
+        0 10px 0 #bdbdbd,
+        0 18px 35px rgba(0,0,0,0.25);
+
+    color: #111111;
+
+    overflow: hidden;
+
+}
+
+
+/* ============================================================
+   TOP 1
+   ============================================================ */
+
+.rank-card.top1 {
+
+    border: 3px solid #d8ff00;
+
+    background:
+        linear-gradient(
+            135deg,
+            #f1f1f1,
+            #d9ff00
+        );
+
+}
+
+
+/* ============================================================
+   TOP 2
+   ============================================================ */
+
+.rank-card.top2 {
+
+    border: 3px solid #bfc4c7;
+
+    background:
+        linear-gradient(
+            135deg,
+            #f4f4f4,
+            #d7dadd
+        );
+
+}
+
+
+/* ============================================================
+   TOP 3
+   ============================================================ */
+
+.rank-card.top3 {
+
+    border: 3px solid #ffb300;
+
+    background:
+        linear-gradient(
+            135deg,
+            #f5f5f5,
+            #ffd37a
+        );
+
+}
+
+
+/* ============================================================
+   OTHER
+   ============================================================ */
+
+.rank-card.other {
+
+    border: 2px solid #d0d0d0;
+
+}
+
+
+/* ============================================================
+   LABEL
    ============================================================ */
 
 .rank-label {
 
-    font-size: 8px !important;
+    text-align: center;
 
-    line-height: 9px !important;
+    font-size: 8px;
 
-    margin: 2px 0 !important;
+    font-weight: 900;
+
+    line-height: 9px;
+
+    color: #202020;
+
+    margin: 0;
 
 }
 
 
 /* ============================================================
-   RANK NUMBER
+   POSICION
    ============================================================ */
 
 .rank-number {
 
-    font-size: 20px !important;
+    text-align: center;
 
-    line-height: 22px !important;
+    font-size: 20px;
 
-    margin: 1px 0 !important;
+    font-weight: 1000;
+
+    line-height: 21px;
+
+    color: #111111;
+
+    margin: 0;
+
+}
+
+
+/* ============================================================
+   TEAM NAME
+   ============================================================ */
+
+.rank-team {
+
+    text-align: center;
+
+    font-size: 15px;
+
+    font-weight: 1000;
+
+    line-height: 17px;
+
+    color: #111111;
+
+    margin: 1px 0 3px 0;
+
+    white-space: nowrap;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
 
 }
 
@@ -609,21 +782,31 @@ body {
 
 .rank-points {
 
-    font-size: 17px !important;
+    text-align: center;
 
-    line-height: 18px !important;
+    font-size: 17px;
 
-    margin: 1px 0 !important;
+    font-weight: 1000;
+
+    line-height: 18px;
+
+    color: #111111;
+
+    margin: 0;
 
 }
 
 .rank-points-label {
 
-    font-size: 7px !important;
+    text-align: center;
 
-    line-height: 8px !important;
+    font-size: 7px;
 
-    margin: 0 !important;
+    font-weight: 900;
+
+    line-height: 8px;
+
+    color: #555555;
 
 }
 
@@ -634,21 +817,31 @@ body {
 
 .rank-kills {
 
-    font-size: 13px !important;
+    text-align: center;
 
-    line-height: 14px !important;
+    font-size: 13px;
 
-    margin: 1px 0 !important;
+    font-weight: 1000;
+
+    line-height: 14px;
+
+    color: #111111;
+
+    margin-top: 1px;
 
 }
 
 .rank-kills-label {
 
-    font-size: 7px !important;
+    text-align: center;
 
-    line-height: 8px !important;
+    font-size: 7px;
 
-    margin: 0 !important;
+    font-weight: 900;
+
+    line-height: 8px;
+
+    color: #555555;
 
 }
 
@@ -659,17 +852,34 @@ body {
 
 .player-header {
 
-    min-height: 20px !important;
+    display: grid;
 
-    height: 20px !important;
+    grid-template-columns:
+        1fr
+        70px
+        50px;
 
-    padding: 2px 5px !important;
+    align-items: center;
 
-    font-size: 7px !important;
+    height: 19px;
 
-    line-height: 8px !important;
+    min-height: 19px;
 
-    margin: 2px 0 0 0 !important;
+    margin-top: 3px;
+
+    padding: 2px 5px;
+
+    background: #202326;
+
+    color: #d8ff00;
+
+    border-radius: 5px 5px 0 0;
+
+    font-size: 6px;
+
+    font-weight: 1000;
+
+    line-height: 7px;
 
 }
 
@@ -680,41 +890,71 @@ body {
 
 .player-row {
 
-    min-height: 21px !important;
+    display: grid;
 
-    height: 21px !important;
+    grid-template-columns:
+        1fr
+        70px
+        50px;
 
-    padding: 2px 5px !important;
+    align-items: center;
 
-    margin: 0 !important;
+    min-height: 20px;
 
-    font-size: 9px !important;
+    height: 20px;
 
-    line-height: 10px !important;
+    padding: 2px 5px;
+
+    background: #eeeeee;
+
+    border-bottom: 1px solid #d0d0d0;
+
+    color: #151515;
+
+    font-size: 8px;
+
+    line-height: 9px;
 
 }
 
+
+/* ============================================================
+   PLAYER NAME
+   ============================================================ */
+
 .player-name {
 
-    font-size: 9px !important;
+    font-size: 8px;
 
-    line-height: 10px !important;
+    font-weight: 900;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+
+    white-space: nowrap;
 
 }
 
 .player-avg {
 
-    font-size: 8px !important;
+    text-align: center;
 
-    line-height: 9px !important;
+    font-size: 7px;
+
+    font-weight: 900;
 
 }
 
 .player-kills {
 
-    font-size: 9px !important;
+    text-align: right;
 
-    line-height: 10px !important;
+    font-size: 8px;
+
+    font-weight: 1000;
+
+    color: #101010;
 
 }
 
@@ -725,29 +965,42 @@ body {
 
 .game-header {
 
-    min-height: 20px !important;
+    display: grid;
 
-    height: 20px !important;
+    grid-template-columns:
+        repeat(
+            var(--games-count),
+            minmax(0, 1fr)
+        );
 
-    margin: 2px 0 0 0 !important;
+    gap: 2px;
 
-    gap: 1px !important;
+    margin-top: 3px;
 
-    font-size: 7px !important;
-
-    line-height: 8px !important;
+    height: 18px;
 
 }
 
+
 .game-header span {
 
-    padding: 2px 1px !important;
+    display: flex;
 
-    font-size: 7px !important;
+    align-items: center;
 
-    line-height: 8px !important;
+    justify-content: center;
 
-    min-width: 0 !important;
+    background: #202326;
+
+    color: #d8ff00;
+
+    border-radius: 4px 4px 0 0;
+
+    font-size: 6px;
+
+    font-weight: 1000;
+
+    line-height: 7px;
 
 }
 
@@ -758,11 +1011,15 @@ body {
 
 .game-values {
 
-    gap: 1px !important;
+    display: grid;
 
-    margin: 0 !important;
+    grid-template-columns:
+        repeat(
+            var(--games-count),
+            minmax(0, 1fr)
+        );
 
-    padding: 0 !important;
+    gap: 2px;
 
 }
 
@@ -773,15 +1030,19 @@ body {
 
 .game-column {
 
-    min-width: 0 !important;
+    min-width: 0;
 
-    padding: 3px 2px !important;
+    min-height: 66px;
 
-    margin: 0 !important;
+    padding: 3px 2px;
 
-    border-radius: 4px !important;
+    background: #eeeeee;
 
-    min-height: 72px !important;
+    border: 1px solid #d0d0d0;
+
+    border-radius: 0 0 5px 5px;
+
+    text-align: center;
 
 }
 
@@ -792,15 +1053,15 @@ body {
 
 .game-position-title {
 
-    font-size: 6px !important;
+    font-size: 5px;
 
-    line-height: 7px !important;
+    font-weight: 1000;
+
+    line-height: 6px;
+
+    color: #666666;
 
     white-space: nowrap;
-
-    margin: 0 0 1px 0 !important;
-
-    padding: 0 !important;
 
 }
 
@@ -811,32 +1072,47 @@ body {
 
 .game-position {
 
-    font-size: 15px !important;
+    font-size: 14px;
 
-    line-height: 17px !important;
+    font-weight: 1000;
 
-    margin: 0 !important;
+    line-height: 16px;
 
-    padding: 0 !important;
-
-    min-height: 17px !important;
+    color: #111111;
 
 }
 
 
 /* ============================================================
-   MULTIPLIER TITLE
+   DUPLICATE POSITION
+   ============================================================ */
+
+.game-position.duplicate-pos {
+
+    color: #ff1f1f;
+
+    background: #ffd6d6;
+
+    border-radius: 3px;
+
+}
+
+
+/* ============================================================
+   SCORE TITLE
    ============================================================ */
 
 .game-score-title {
 
-    font-size: 5.5px !important;
+    margin-top: 2px;
 
-    line-height: 6px !important;
+    font-size: 4.5px;
 
-    margin: 3px 0 1px 0 !important;
+    font-weight: 1000;
 
-    padding: 0 !important;
+    line-height: 5px;
+
+    color: #777777;
 
 }
 
@@ -847,13 +1123,13 @@ body {
 
 .game-score {
 
-    font-size: 12px !important;
+    font-size: 10px;
 
-    line-height: 14px !important;
+    font-weight: 1000;
 
-    margin: 0 !important;
+    line-height: 12px;
 
-    padding: 0 !important;
+    color: #151515;
 
 }
 
@@ -864,25 +1140,52 @@ body {
 
 .summary-team {
 
-    min-height: 27px !important;
+    display: flex;
 
-    height: 27px !important;
+    align-items: center;
 
-    padding: 3px 5px !important;
+    gap: 5px;
 
-    margin: 2px 0 0 0 !important;
+    height: 25px;
+
+    min-height: 25px;
+
+    margin-top: 2px;
+
+    padding: 2px 5px;
+
+    background: #202326;
+
+    border-radius: 5px 5px 0 0;
 
 }
+
+
+/* ============================================================
+   TEAM MARK
+   ============================================================ */
 
 .team-mark {
 
-    font-size: 10px !important;
+    display: flex;
 
-}
+    align-items: center;
 
-.summary-team div {
+    justify-content: center;
 
-    line-height: 9px !important;
+    width: 20px;
+
+    height: 20px;
+
+    border-radius: 4px;
+
+    background: #d8ff00;
+
+    color: #111111;
+
+    font-size: 9px;
+
+    font-weight: 1000;
 
 }
 
@@ -893,31 +1196,57 @@ body {
 
 .summary-values {
 
-    gap: 1px !important;
+    display: grid;
 
-    margin: 0 !important;
+    grid-template-columns:
+        repeat(
+            var(--games-count),
+            minmax(0, 1fr)
+        );
 
-    padding: 0 !important;
+    gap: 2px;
 
 }
+
+
+/* ============================================================
+   SUMMARY ITEM
+   ============================================================ */
 
 .summary-item {
 
-    min-height: 25px !important;
+    min-height: 22px;
 
-    padding: 2px !important;
+    padding: 2px;
 
-    font-size: 6px !important;
+    text-align: center;
 
-    line-height: 7px !important;
+    background: #eeeeee;
+
+    color: #333333;
+
+    border-radius: 0 0 4px 4px;
+
+    font-size: 5px;
+
+    line-height: 6px;
 
 }
 
+
+/* ============================================================
+   SUMMARY NUMBER
+   ============================================================ */
+
 .summary-label {
 
-    font-size: 10px !important;
+    font-size: 9px;
 
-    line-height: 11px !important;
+    font-weight: 1000;
+
+    line-height: 10px;
+
+    color: #111111;
 
 }
 
@@ -928,67 +1257,103 @@ body {
 
 .fragger-title {
 
-    font-size: 12px !important;
+    margin-top: 10px;
 
-    line-height: 14px !important;
+    margin-bottom: 3px;
 
-    margin: 6px 0 2px 0 !important;
+    padding: 5px 7px;
 
-    padding: 3px 5px !important;
+    background: #202326;
+
+    border-left: 5px solid #d8ff00;
+
+    border-radius: 6px;
+
+    color: #d8ff00;
+
+    font-size: 12px;
+
+    font-weight: 1000;
+
+    line-height: 13px;
 
 }
 
 
 /* ============================================================
-   FRAGGER ROW
+   FRAGGER TABLE
    ============================================================ */
 
 .fragger-row {
 
-    min-height: 22px !important;
+    display: grid;
 
-    height: 22px !important;
+    grid-template-columns:
+        42px
+        minmax(0, 1.4fr)
+        minmax(0, 1fr)
+        45px;
 
-    padding: 2px 5px !important;
+    align-items: center;
 
-    margin: 0 !important;
+    min-height: 20px;
 
-    font-size: 8px !important;
+    height: 20px;
 
-    line-height: 9px !important;
+    padding: 2px 5px;
+
+    background: #eeeeee;
+
+    border-bottom: 1px solid #d0d0d0;
+
+    color: #151515;
+
+    font-size: 7px;
+
+    line-height: 8px;
 
 }
 
+
 .fragger-row.header {
 
-    min-height: 19px !important;
+    height: 18px;
 
-    height: 19px !important;
+    min-height: 18px;
 
-    font-size: 7px !important;
+    background: #202326;
 
-    line-height: 8px !important;
+    color: #d8ff00;
+
+    font-size: 6px;
+
+    font-weight: 1000;
 
 }
 
 
 /* ============================================================
-   FRAGGER CELLS
+   FRAGGER POSITION
    ============================================================ */
 
 .fragger-pos {
 
-    font-size: 9px !important;
+    font-size: 8px;
 
-    line-height: 10px !important;
+    font-weight: 1000;
 
 }
+
+
+/* ============================================================
+   FRAGGER PLAYER
+   ============================================================ */
 
 .fragger-player {
 
-    font-size: 8px !important;
+    font-size: 7px;
 
-    line-height: 9px !important;
+    font-weight: 900;
 
     overflow: hidden;
 
@@ -997,12 +1362,19 @@ body {
     white-space: nowrap;
 
 }
+
+
+/* ============================================================
+   FRAGGER TEAM
+   ============================================================ */
 
 .fragger-team {
 
-    font-size: 7px !important;
+    font-size: 6px;
 
-    line-height: 8px !important;
+    font-weight: 700;
+
+    color: #555555;
 
     overflow: hidden;
 
@@ -1012,11 +1384,18 @@ body {
 
 }
 
+
+/* ============================================================
+   FRAGGER KILLS
+   ============================================================ */
+
 .fragger-kills {
 
-    font-size: 10px !important;
+    text-align: right;
 
-    line-height: 11px !important;
+    font-size: 9px;
+
+    font-weight: 1000;
 
 }
 
@@ -1028,82 +1407,165 @@ body {
 @media (max-width: 600px) {
 
 
-    body {
+    .container {
 
-        font-size: 9px;
+        padding: 5px;
+
+    }
+
+
+    .title {
+
+        font-size: 20px;
+
+        margin-bottom: 5px;
+
+    }
+
+
+    .rank-card {
+
+        margin-bottom: 6px;
+
+        padding: 5px;
+
+        border-radius: 11px;
+
+        box-shadow:
+            0 6px 0 #bdbdbd,
+            0 10px 20px rgba(0,0,0,0.20);
 
     }
 
 
     .rank-label {
 
-        font-size: 7px !important;
+        font-size: 6px;
+
+        line-height: 7px;
 
     }
 
 
     .rank-number {
 
-        font-size: 17px !important;
+        font-size: 16px;
 
-        line-height: 18px !important;
+        line-height: 17px;
+
+    }
+
+
+    .rank-team {
+
+        font-size: 12px;
+
+        line-height: 14px;
+
+        margin: 0 0 2px 0;
 
     }
 
 
     .rank-points {
 
-        font-size: 14px !important;
+        font-size: 13px;
 
-        line-height: 15px !important;
+        line-height: 14px;
+
+    }
+
+
+    .rank-points-label {
+
+        font-size: 5px;
+
+        line-height: 6px;
 
     }
 
 
     .rank-kills {
 
-        font-size: 11px !important;
+        font-size: 10px;
 
-        line-height: 12px !important;
+        line-height: 11px;
 
     }
 
 
-    /* PLAYERS */
+    .rank-kills-label {
+
+        font-size: 5px;
+
+        line-height: 6px;
+
+    }
+
+
+    /* PLAYER */
 
     .player-header {
 
-        height: 18px !important;
+        grid-template-columns:
+            1fr
+            52px
+            38px;
 
-        min-height: 18px !important;
+        height: 16px;
 
-        font-size: 6px !important;
+        min-height: 16px;
+
+        padding: 1px 4px;
+
+        margin-top: 2px;
+
+        font-size: 5px;
+
+        line-height: 6px;
 
     }
 
 
     .player-row {
 
-        height: 19px !important;
+        grid-template-columns:
+            1fr
+            52px
+            38px;
 
-        min-height: 19px !important;
+        height: 17px;
 
-        font-size: 8px !important;
+        min-height: 17px;
+
+        padding: 1px 4px;
 
     }
 
 
     .player-name {
 
-        font-size: 8px !important;
+        font-size: 7px;
+
+        line-height: 8px;
 
     }
 
 
-    .player-avg,
+    .player-avg {
+
+        font-size: 6px;
+
+        line-height: 7px;
+
+    }
+
+
     .player-kills {
 
-        font-size: 7px !important;
+        font-size: 7px;
+
+        line-height: 8px;
 
     }
 
@@ -1112,67 +1574,78 @@ body {
 
     .game-header {
 
-        height: 17px !important;
+        height: 15px;
 
-        min-height: 17px !important;
+        gap: 1px;
+
+        margin-top: 2px;
 
     }
 
 
     .game-header span {
 
-        font-size: 6px !important;
+        font-size: 5px;
 
-        line-height: 7px !important;
+        line-height: 6px;
+
+        border-radius: 3px 3px 0 0;
+
+    }
+
+
+    .game-values {
+
+        gap: 1px;
 
     }
 
 
     .game-column {
 
-        min-height: 63px !important;
+        min-height: 55px;
 
-        padding: 2px 1px !important;
+        padding: 2px 1px;
 
-        border-radius: 3px !important;
+        border-radius: 0 0 3px 3px;
 
     }
 
 
     .game-position-title {
 
-        font-size: 5px !important;
+        font-size: 4px;
 
-        line-height: 6px !important;
+        line-height: 5px;
 
     }
 
 
     .game-position {
 
-        font-size: 13px !important;
+        font-size: 12px;
 
-        line-height: 14px !important;
+        line-height: 13px;
 
     }
 
 
     .game-score-title {
 
-        font-size: 4.5px !important;
+        margin-top: 1px;
 
-        line-height: 5px !important;
+        font-size: 3.8px;
 
-        margin-top: 2px !important;
+        line-height: 4px;
 
     }
 
 
     .game-score {
 
-        font-size: 10px !important;
+        font-size: 9px;
 
-        line-height: 11px !important;
+        line-height: 10px;
 
     }
 
@@ -1181,29 +1654,55 @@ body {
 
     .summary-team {
 
-        height: 23px !important;
+        height: 21px;
 
-        min-height: 23px !important;
+        min-height: 21px;
 
-        padding: 2px 4px !important;
+        margin-top: 1px;
+
+        padding: 1px 4px;
+
+        gap: 3px;
+
+    }
+
+
+    .team-mark {
+
+        width: 17px;
+
+        height: 17px;
+
+        font-size: 7px;
+
+    }
+
+
+    .summary-values {
+
+        gap: 1px;
 
     }
 
 
     .summary-item {
 
-        min-height: 21px !important;
+        min-height: 18px;
 
-        font-size: 5px !important;
+        padding: 1px;
+
+        font-size: 4px;
+
+        line-height: 5px;
 
     }
 
 
     .summary-label {
 
-        font-size: 9px !important;
+        font-size: 8px;
 
-        line-height: 9px !important;
+        line-height: 8px;
 
     }
 
@@ -1212,63 +1711,77 @@ body {
 
     .fragger-title {
 
-        font-size: 10px !important;
+        margin-top: 6px;
 
-        line-height: 11px !important;
+        margin-bottom: 2px;
 
-        padding: 2px 4px !important;
+        padding: 3px 5px;
 
-        margin-top: 4px !important;
+        border-left-width: 3px;
+
+        border-radius: 4px;
+
+        font-size: 9px;
+
+        line-height: 10px;
 
     }
 
 
     .fragger-row {
 
-        height: 19px !important;
+        grid-template-columns:
+            32px
+            minmax(0, 1.4fr)
+            minmax(0, 1fr)
+            35px;
 
-        min-height: 19px !important;
+        height: 17px;
 
-        font-size: 7px !important;
+        min-height: 17px;
+
+        padding: 1px 4px;
+
+        font-size: 6px;
 
     }
 
 
     .fragger-row.header {
 
-        height: 17px !important;
+        height: 15px;
 
-        min-height: 17px !important;
+        min-height: 15px;
 
-        font-size: 6px !important;
+        font-size: 5px;
 
     }
 
 
     .fragger-pos {
 
-        font-size: 8px !important;
+        font-size: 7px;
 
     }
 
 
     .fragger-player {
 
-        font-size: 7px !important;
+        font-size: 6px;
 
     }
 
 
     .fragger-team {
 
-        font-size: 6px !important;
+        font-size: 5px;
 
     }
 
 
     .fragger-kills {
 
-        font-size: 9px !important;
+        font-size: 8px;
 
     }
 
@@ -1276,45 +1789,71 @@ body {
 
 
 /* ============================================================
-   VERY SMALL PHONES
+   CELULARES PEQUEÑOS
    ============================================================ */
 
 @media (max-width: 380px) {
 
 
+    .container {
+
+        padding: 3px;
+
+    }
+
+
+    .rank-card {
+
+        padding: 4px;
+
+        margin-bottom: 5px;
+
+    }
+
+
     .game-column {
 
-        padding: 2px 0 !important;
+        min-height: 50px;
 
-        min-height: 58px !important;
+        padding: 1px;
 
     }
 
 
     .game-position {
 
-        font-size: 12px !important;
+        font-size: 11px;
 
-    }
-
-
-    .game-score {
-
-        font-size: 9px !important;
-
-    }
-
-
-    .game-position-title {
-
-        font-size: 4.5px !important;
+        line-height: 12px;
 
     }
 
 
     .game-score-title {
 
-        font-size: 4px !important;
+        font-size: 3.5px;
+
+        line-height: 4px;
+
+    }
+
+
+    .game-score {
+
+        font-size: 8px;
+
+        line-height: 9px;
+
+    }
+
+
+    .fragger-row {
+
+        grid-template-columns:
+            28px
+            minmax(0, 1.4fr)
+            minmax(0, 1fr)
+            30px;
 
     }
 
@@ -1324,9 +1863,12 @@ body {
 
 </head>
 
+
 <body>
 
+
 <div class="container">
+
 
 <div class="title">
 
@@ -1466,23 +2008,15 @@ TORNEOS MANYN
 <div class="player-header">
 
     <div>
-
         PLAYER
-
     </div>
 
-
     <div>
-
         AVG KILLS
-
     </div>
 
-
     <div>
-
         KILLS
-
     </div>
 
 </div>
@@ -1499,12 +2033,10 @@ TORNEOS MANYN
 
         for g, info in r["games"].items():
 
-
             for p, k in info.get(
                 "players",
                 {}
             ).items():
-
 
                 if isinstance(
                     k,
@@ -1790,7 +2322,8 @@ TORNEOS MANYN
             style="
             color:#ffffff;
             font-weight:900;
-            font-size:10px;
+            font-size:9px;
+            line-height:9px;
             "
         >
 
@@ -1802,7 +2335,8 @@ TORNEOS MANYN
         <div
             style="
             color:#8f989c;
-            font-size:7px;
+            font-size:6px;
+            line-height:7px;
             "
         >
 
@@ -2023,6 +2557,7 @@ TORNEOS MANYN
     html += """
 
 </div>
+
 
 </body>
 
