@@ -523,7 +523,7 @@ def home():
 
 
     # ========================================================
-    # HTML + CSS
+    # HTML
     # ========================================================
 
     html = """
@@ -547,97 +547,176 @@ content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable
 <style>
 
 /* ============================================================
+   COLORES PRINCIPALES
+   ============================================================ */
+
+:root {
+
+    --bg:
+        #101516;
+
+    --card:
+        #1b2426;
+
+    --card-dark:
+        #171e20;
+
+    --card-light:
+        #202a2c;
+
+    --border:
+        #303a3c;
+
+    --yellow:
+        #ffc400;
+
+    --yellow-dark:
+        #d9a700;
+
+    --white:
+        #f4f7f8;
+
+    --text:
+        #d8e0e2;
+
+    --muted:
+        #7f8c90;
+
+    --muted-dark:
+        #596569;
+
+    --red:
+        #ff3b30;
+
+}
+
+
+/* ============================================================
    RESET
    ============================================================ */
 
 * {
-    box-sizing: border-box;
+
+    box-sizing:
+        border-box;
+
 }
+
 
 html,
 body {
-    margin: 0;
-    padding: 0;
-    width: 100%;
+
+    margin:
+        0;
+
+    padding:
+        0;
+
+    width:
+        100%;
+
+    min-height:
+        100%;
+
 }
+
 
 body {
 
-    background: #f2eee6;
+    background:
+        var(--bg);
 
-    color: #ffffff;
+    color:
+        var(--white);
 
     font-family:
         Arial,
         Helvetica,
         sans-serif;
 
-    overflow-x: hidden;
+    overflow-x:
+        hidden;
 
 }
 
 
 /* ============================================================
-   CONTENEDOR
+   CONTAINER
    ============================================================ */
 
 .container {
 
-    width: 100%;
+    width:
+        100%;
 
-    max-width: 1200px;
+    max-width:
+        1550px;
 
-    margin: 0 auto;
+    margin:
+        0 auto;
 
-    padding: 10px;
+    padding:
+        8px;
 
 }
 
 
 /* ============================================================
-   TITULO
+   TITLE
    ============================================================ */
 
 .title {
 
-    text-align: center;
+    text-align:
+        center;
 
-    font-size: 25px;
+    color:
+        var(--yellow);
 
-    font-weight: 1000;
+    font-size:
+        20px;
 
-    letter-spacing: 1px;
+    font-weight:
+        1000;
 
-    color: #111111;
+    letter-spacing:
+        1px;
 
-    margin-bottom: 10px;
+    margin:
+        2px 0 8px 0;
 
 }
 
 
 /* ============================================================
-   TARJETA DE EQUIPO
+   RANK CARD
    ============================================================ */
 
 .rank-card {
 
-    width: 100%;
+    width:
+        100%;
 
-    margin-bottom: 9px;
+    margin-bottom:
+        7px;
 
-    padding: 7px;
+    padding:
+        7px 9px 6px 9px;
 
-    background: #e6e6e6;
+    background:
+        var(--card);
 
-    border-radius: 16px;
+    border:
+        1px solid var(--border);
+
+    border-radius:
+        14px;
 
     box-shadow:
-        0 10px 0 #bdbdbd,
-        0 18px 35px rgba(0,0,0,0.25);
+        0 5px 15px rgba(0,0,0,0.28);
 
-    color: #111111;
-
-    overflow: hidden;
+    overflow:
+        hidden;
 
 }
 
@@ -648,14 +727,8 @@ body {
 
 .rank-card.top1 {
 
-    border: 3px solid #d8ff00;
-
-    background:
-        linear-gradient(
-            135deg,
-            #f1f1f1,
-            #d9ff00
-        );
+    border-color:
+        #3b4446;
 
 }
 
@@ -666,14 +739,8 @@ body {
 
 .rank-card.top2 {
 
-    border: 3px solid #bfc4c7;
-
-    background:
-        linear-gradient(
-            135deg,
-            #f4f4f4,
-            #d7dadd
-        );
+    border-color:
+        #343d3f;
 
 }
 
@@ -684,25 +751,67 @@ body {
 
 .rank-card.top3 {
 
-    border: 3px solid #ffb300;
-
-    background:
-        linear-gradient(
-            135deg,
-            #f5f5f5,
-            #ffd37a
-        );
+    border-color:
+        #343d3f;
 
 }
 
 
 /* ============================================================
-   OTHER
+   RANK MAIN
    ============================================================ */
 
-.rank-card.other {
+.rank-main {
 
-    border: 2px solid #d0d0d0;
+    display:
+        grid;
+
+    grid-template-columns:
+        78px
+        minmax(250px, 1fr)
+        minmax(360px, 1.8fr);
+
+    gap:
+        8px;
+
+    align-items:
+        stretch;
+
+}
+
+
+/* ============================================================
+   RANK BOX
+   ============================================================ */
+
+.rank-box {
+
+    min-height:
+        115px;
+
+    background:
+        #20282a;
+
+    border:
+        1px solid #293335;
+
+    border-radius:
+        9px;
+
+    display:
+        flex;
+
+    flex-direction:
+        column;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    position:
+        relative;
 
 }
 
@@ -713,38 +822,143 @@ body {
 
 .rank-label {
 
-    text-align: center;
+    position:
+        absolute;
 
-    font-size: 8px;
+    top:
+        0;
 
-    font-weight: 900;
+    left:
+        0;
 
-    line-height: 9px;
+    padding:
+        3px 10px;
 
-    color: #202020;
+    background:
+        var(--yellow);
 
-    margin: 0;
+    color:
+        #151515;
+
+    font-size:
+        8px;
+
+    font-weight:
+        1000;
+
+    border-radius:
+        6px 0 6px 0;
 
 }
 
 
 /* ============================================================
-   POSICION
+   POSITION
    ============================================================ */
 
 .rank-number {
 
-    text-align: center;
+    color:
+        var(--yellow);
 
-    font-size: 20px;
+    font-size:
+        30px;
 
-    font-weight: 1000;
+    font-weight:
+        1000;
 
-    line-height: 21px;
+    line-height:
+        30px;
 
-    color: #111111;
+    margin-top:
+        4px;
 
-    margin: 0;
+}
+
+
+/* ============================================================
+   RANK POINTS
+   ============================================================ */
+
+.rank-points {
+
+    color:
+        var(--yellow);
+
+    font-size:
+        16px;
+
+    font-weight:
+        1000;
+
+    line-height:
+        17px;
+
+    margin-top:
+        7px;
+
+}
+
+
+.rank-points-label {
+
+    color:
+        #d4dadd;
+
+    font-size:
+        7px;
+
+    line-height:
+        8px;
+
+}
+
+
+.rank-kills {
+
+    color:
+        var(--yellow);
+
+    font-size:
+        14px;
+
+    font-weight:
+        1000;
+
+    line-height:
+        15px;
+
+    margin-top:
+        7px;
+
+}
+
+
+.rank-kills-label {
+
+    color:
+        #d4dadd;
+
+    font-size:
+        7px;
+
+    line-height:
+        8px;
+
+}
+
+
+/* ============================================================
+   TEAM AREA
+   ============================================================ */
+
+.team-area {
+
+    min-width:
+        0;
+
+    padding:
+        3px 4px;
 
 }
 
@@ -755,93 +969,29 @@ body {
 
 .rank-team {
 
-    text-align: center;
+    color:
+        var(--white);
 
-    font-size: 15px;
+    font-size:
+        14px;
 
-    font-weight: 1000;
+    font-weight:
+        1000;
 
-    line-height: 17px;
+    line-height:
+        17px;
 
-    color: #111111;
+    margin:
+        1px 0 4px 0;
 
-    margin: 1px 0 3px 0;
+    white-space:
+        nowrap;
 
-    white-space: nowrap;
+    overflow:
+        hidden;
 
-    overflow: hidden;
-
-    text-overflow: ellipsis;
-
-}
-
-
-/* ============================================================
-   POINTS
-   ============================================================ */
-
-.rank-points {
-
-    text-align: center;
-
-    font-size: 17px;
-
-    font-weight: 1000;
-
-    line-height: 18px;
-
-    color: #111111;
-
-    margin: 0;
-
-}
-
-.rank-points-label {
-
-    text-align: center;
-
-    font-size: 7px;
-
-    font-weight: 900;
-
-    line-height: 8px;
-
-    color: #555555;
-
-}
-
-
-/* ============================================================
-   KILLS
-   ============================================================ */
-
-.rank-kills {
-
-    text-align: center;
-
-    font-size: 13px;
-
-    font-weight: 1000;
-
-    line-height: 14px;
-
-    color: #111111;
-
-    margin-top: 1px;
-
-}
-
-.rank-kills-label {
-
-    text-align: center;
-
-    font-size: 7px;
-
-    font-weight: 900;
-
-    line-height: 8px;
-
-    color: #555555;
+    text-overflow:
+        ellipsis;
 
 }
 
@@ -852,34 +1002,42 @@ body {
 
 .player-header {
 
-    display: grid;
+    display:
+        grid;
 
     grid-template-columns:
-        1fr
-        70px
-        50px;
+        minmax(120px, 1fr)
+        55px
+        48px
+        48px
+        48px;
 
-    align-items: center;
+    align-items:
+        center;
 
-    height: 19px;
+    height:
+        18px;
 
-    min-height: 19px;
+    padding:
+        2px 4px;
 
-    margin-top: 3px;
+    background:
+        #151c1e;
 
-    padding: 2px 5px;
+    border-bottom:
+        1px solid #30383a;
 
-    background: #202326;
+    color:
+        var(--muted);
 
-    color: #d8ff00;
+    font-size:
+        6px;
 
-    border-radius: 5px 5px 0 0;
+    font-weight:
+        900;
 
-    font-size: 6px;
-
-    font-weight: 1000;
-
-    line-height: 7px;
+    line-height:
+        7px;
 
 }
 
@@ -890,30 +1048,39 @@ body {
 
 .player-row {
 
-    display: grid;
+    display:
+        grid;
 
     grid-template-columns:
-        1fr
-        70px
-        50px;
+        minmax(120px, 1fr)
+        55px
+        48px
+        48px
+        48px;
 
-    align-items: center;
+    align-items:
+        center;
 
-    min-height: 20px;
+    height:
+        21px;
 
-    height: 20px;
+    min-height:
+        21px;
 
-    padding: 2px 5px;
+    padding:
+        2px 4px;
 
-    background: #eeeeee;
+    border-bottom:
+        1px solid #2b3436;
 
-    border-bottom: 1px solid #d0d0d0;
+    color:
+        var(--text);
 
-    color: #151515;
+    font-size:
+        8px;
 
-    font-size: 8px;
-
-    line-height: 9px;
+    line-height:
+        9px;
 
 }
 
@@ -924,37 +1091,62 @@ body {
 
 .player-name {
 
-    font-size: 8px;
+    color:
+        #ffffff;
 
-    font-weight: 900;
+    font-size:
+        9px;
 
-    overflow: hidden;
+    font-weight:
+        900;
 
-    text-overflow: ellipsis;
+    white-space:
+        nowrap;
 
-    white-space: nowrap;
+    overflow:
+        hidden;
 
-}
-
-.player-avg {
-
-    text-align: center;
-
-    font-size: 7px;
-
-    font-weight: 900;
+    text-overflow:
+        ellipsis;
 
 }
 
-.player-kills {
 
-    text-align: right;
+/* ============================================================
+   PLAYER STATS
+   ============================================================ */
 
-    font-size: 8px;
+.player-avg,
+.player-kills,
+.player-deaths,
+.player-kd {
 
-    font-weight: 1000;
+    text-align:
+        center;
 
-    color: #101010;
+    color:
+        #b9c4c7;
+
+    font-size:
+        8px;
+
+    font-weight:
+        700;
+
+}
+
+
+/* ============================================================
+   GAME AREA
+   ============================================================ */
+
+.games-area {
+
+    min-width:
+        0;
+
+    overflow:
+        hidden;
 
 }
 
@@ -965,42 +1157,43 @@ body {
 
 .game-header {
 
-    display: grid;
+    display:
+        grid;
 
     grid-template-columns:
         repeat(
             var(--games-count),
-            minmax(0, 1fr)
+            minmax(24px, 1fr)
         );
 
-    gap: 2px;
+    gap:
+        1px;
 
-    margin-top: 3px;
+    height:
+        18px;
 
-    height: 18px;
+    align-items:
+        center;
 
 }
 
 
 .game-header span {
 
-    display: flex;
+    text-align:
+        center;
 
-    align-items: center;
+    color:
+        var(--muted);
 
-    justify-content: center;
+    font-size:
+        6px;
 
-    background: #202326;
+    line-height:
+        7px;
 
-    color: #d8ff00;
-
-    border-radius: 4px 4px 0 0;
-
-    font-size: 6px;
-
-    font-weight: 1000;
-
-    line-height: 7px;
+    white-space:
+        nowrap;
 
 }
 
@@ -1011,15 +1204,17 @@ body {
 
 .game-values {
 
-    display: grid;
+    display:
+        grid;
 
     grid-template-columns:
         repeat(
             var(--games-count),
-            minmax(0, 1fr)
+            minmax(24px, 1fr)
         );
 
-    gap: 2px;
+    gap:
+        1px;
 
 }
 
@@ -1030,19 +1225,26 @@ body {
 
 .game-column {
 
-    min-width: 0;
+    min-width:
+        0;
 
-    min-height: 66px;
+    min-height:
+        62px;
 
-    padding: 3px 2px;
+    padding:
+        4px 2px;
 
-    background: #eeeeee;
+    background:
+        #1a2224;
 
-    border: 1px solid #d0d0d0;
+    border:
+        1px solid #293234;
 
-    border-radius: 0 0 5px 5px;
+    border-radius:
+        4px;
 
-    text-align: center;
+    text-align:
+        center;
 
 }
 
@@ -1053,15 +1255,20 @@ body {
 
 .game-position-title {
 
-    font-size: 5px;
+    color:
+        var(--muted);
 
-    font-weight: 1000;
+    font-size:
+        5px;
 
-    line-height: 6px;
+    font-weight:
+        900;
 
-    color: #666666;
+    line-height:
+        6px;
 
-    white-space: nowrap;
+    white-space:
+        nowrap;
 
 }
 
@@ -1072,28 +1279,38 @@ body {
 
 .game-position {
 
-    font-size: 14px;
+    color:
+        #ffffff;
 
-    font-weight: 1000;
+    font-size:
+        14px;
 
-    line-height: 16px;
+    font-weight:
+        1000;
 
-    color: #111111;
+    line-height:
+        16px;
+
+    margin-top:
+        2px;
 
 }
 
 
 /* ============================================================
-   DUPLICATE POSITION
+   DUPLICATE
    ============================================================ */
 
 .game-position.duplicate-pos {
 
-    color: #ff1f1f;
+    color:
+        var(--red);
 
-    background: #ffd6d6;
+    background:
+        rgba(255,59,48,0.13);
 
-    border-radius: 3px;
+    border-radius:
+        3px;
 
 }
 
@@ -1104,15 +1321,20 @@ body {
 
 .game-score-title {
 
-    margin-top: 2px;
+    color:
+        var(--muted);
 
-    font-size: 4.5px;
+    font-size:
+        4px;
 
-    font-weight: 1000;
+    font-weight:
+        900;
 
-    line-height: 5px;
+    line-height:
+        5px;
 
-    color: #777777;
+    margin-top:
+        5px;
 
 }
 
@@ -1123,13 +1345,42 @@ body {
 
 .game-score {
 
-    font-size: 10px;
+    color:
+        var(--yellow);
 
-    font-weight: 1000;
+    font-size:
+        9px;
 
-    line-height: 12px;
+    font-weight:
+        1000;
 
-    color: #151515;
+    line-height:
+        10px;
+
+    margin-top:
+        1px;
+
+}
+
+
+/* ============================================================
+   SUMMARY
+   ============================================================ */
+
+.summary {
+
+    display:
+        grid;
+
+    grid-template-columns:
+        150px
+        minmax(0, 1fr);
+
+    gap:
+        4px;
+
+    margin-top:
+        4px;
 
 }
 
@@ -1140,23 +1391,29 @@ body {
 
 .summary-team {
 
-    display: flex;
+    display:
+        flex;
 
-    align-items: center;
+    align-items:
+        center;
 
-    gap: 5px;
+    gap:
+        7px;
 
-    height: 25px;
+    height:
+        29px;
 
-    min-height: 25px;
+    padding:
+        3px 6px;
 
-    margin-top: 2px;
+    background:
+        #151c1e;
 
-    padding: 2px 5px;
+    border:
+        1px solid #293234;
 
-    background: #202326;
-
-    border-radius: 5px 5px 0 0;
+    border-radius:
+        5px;
 
 }
 
@@ -1167,25 +1424,70 @@ body {
 
 .team-mark {
 
-    display: flex;
+    display:
+        flex;
 
-    align-items: center;
+    align-items:
+        center;
 
-    justify-content: center;
+    justify-content:
+        center;
 
-    width: 20px;
+    width:
+        21px;
 
-    height: 20px;
+    height:
+        21px;
 
-    border-radius: 4px;
+    border-radius:
+        4px;
 
-    background: #d8ff00;
+    background:
+        var(--yellow);
 
-    color: #111111;
+    color:
+        #171717;
 
-    font-size: 9px;
+    font-size:
+        8px;
 
-    font-weight: 1000;
+    font-weight:
+        1000;
+
+}
+
+
+/* ============================================================
+   SUMMARY TEXT
+   ============================================================ */
+
+.summary-title {
+
+    color:
+        #ffffff;
+
+    font-size:
+        8px;
+
+    font-weight:
+        900;
+
+    line-height:
+        9px;
+
+}
+
+
+.summary-subtitle {
+
+    color:
+        var(--muted);
+
+    font-size:
+        5px;
+
+    line-height:
+        6px;
 
 }
 
@@ -1196,15 +1498,17 @@ body {
 
 .summary-values {
 
-    display: grid;
+    display:
+        grid;
 
     grid-template-columns:
         repeat(
             var(--games-count),
-            minmax(0, 1fr)
+            minmax(24px, 1fr)
         );
 
-    gap: 2px;
+    gap:
+        1px;
 
 }
 
@@ -1215,38 +1519,49 @@ body {
 
 .summary-item {
 
-    min-height: 22px;
+    min-height:
+        29px;
 
-    padding: 2px;
+    padding:
+        3px 2px;
 
-    text-align: center;
+    background:
+        #1a2224;
 
-    background: #eeeeee;
+    border:
+        1px solid #293234;
 
-    color: #333333;
+    border-radius:
+        4px;
 
-    border-radius: 0 0 4px 4px;
+    text-align:
+        center;
 
-    font-size: 5px;
+    color:
+        var(--muted);
 
-    line-height: 6px;
+    font-size:
+        5px;
+
+    line-height:
+        6px;
 
 }
 
 
-/* ============================================================
-   SUMMARY NUMBER
-   ============================================================ */
-
 .summary-label {
 
-    font-size: 9px;
+    color:
+        #dfe6e8;
 
-    font-weight: 1000;
+    font-size:
+        9px;
 
-    line-height: 10px;
+    font-weight:
+        1000;
 
-    color: #111111;
+    line-height:
+        10px;
 
 }
 
@@ -1257,25 +1572,32 @@ body {
 
 .fragger-title {
 
-    margin-top: 10px;
+    margin:
+        10px 0 4px 0;
 
-    margin-bottom: 3px;
+    padding:
+        6px 8px;
 
-    padding: 5px 7px;
+    background:
+        #1b2426;
 
-    background: #202326;
+    border:
+        1px solid #303a3c;
 
-    border-left: 5px solid #d8ff00;
+    border-left:
+        4px solid var(--yellow);
 
-    border-radius: 6px;
+    border-radius:
+        6px;
 
-    color: #d8ff00;
+    color:
+        var(--yellow);
 
-    font-size: 12px;
+    font-size:
+        11px;
 
-    font-weight: 1000;
-
-    line-height: 13px;
+    font-weight:
+        1000;
 
 }
 
@@ -1286,61 +1608,79 @@ body {
 
 .fragger-row {
 
-    display: grid;
+    display:
+        grid;
 
     grid-template-columns:
-        42px
-        minmax(0, 1.4fr)
+        45px
+        minmax(0, 1.5fr)
         minmax(0, 1fr)
-        45px;
+        55px;
 
-    align-items: center;
+    align-items:
+        center;
 
-    min-height: 20px;
+    height:
+        22px;
 
-    height: 20px;
+    min-height:
+        22px;
 
-    padding: 2px 5px;
+    padding:
+        2px 6px;
 
-    background: #eeeeee;
+    background:
+        #1b2426;
 
-    border-bottom: 1px solid #d0d0d0;
+    border-bottom:
+        1px solid #2d3638;
 
-    color: #151515;
+    color:
+        var(--text);
 
-    font-size: 7px;
-
-    line-height: 8px;
+    font-size:
+        8px;
 
 }
 
 
 .fragger-row.header {
 
-    height: 18px;
+    height:
+        19px;
 
-    min-height: 18px;
+    min-height:
+        19px;
 
-    background: #202326;
+    background:
+        #151c1e;
 
-    color: #d8ff00;
+    color:
+        var(--muted);
 
-    font-size: 6px;
+    font-size:
+        6px;
 
-    font-weight: 1000;
+    font-weight:
+        900;
 
 }
 
 
 /* ============================================================
-   FRAGGER POSITION
+   FRAGGER POS
    ============================================================ */
 
 .fragger-pos {
 
-    font-size: 8px;
+    color:
+        var(--yellow);
 
-    font-weight: 1000;
+    font-size:
+        9px;
+
+    font-weight:
+        1000;
 
 }
 
@@ -1351,15 +1691,23 @@ body {
 
 .fragger-player {
 
-    font-size: 7px;
+    color:
+        #ffffff;
 
-    font-weight: 900;
+    font-size:
+        8px;
 
-    overflow: hidden;
+    font-weight:
+        900;
 
-    text-overflow: ellipsis;
+    white-space:
+        nowrap;
 
-    white-space: nowrap;
+    overflow:
+        hidden;
+
+    text-overflow:
+        ellipsis;
 
 }
 
@@ -1370,17 +1718,20 @@ body {
 
 .fragger-team {
 
-    font-size: 6px;
+    color:
+        #8d9a9e;
 
-    font-weight: 700;
+    font-size:
+        7px;
 
-    color: #555555;
+    white-space:
+        nowrap;
 
-    overflow: hidden;
+    overflow:
+        hidden;
 
-    text-overflow: ellipsis;
-
-    white-space: nowrap;
+    text-overflow:
+        ellipsis;
 
 }
 
@@ -1391,11 +1742,49 @@ body {
 
 .fragger-kills {
 
-    text-align: right;
+    text-align:
+        right;
 
-    font-size: 9px;
+    color:
+        var(--yellow);
 
-    font-weight: 1000;
+    font-size:
+        9px;
+
+    font-weight:
+        1000;
+
+}
+
+
+/* ============================================================
+   TABLET
+   ============================================================ */
+
+@media (max-width: 900px) {
+
+    .rank-main {
+
+        grid-template-columns:
+            65px
+            minmax(190px, 1fr)
+            minmax(280px, 1.5fr);
+
+    }
+
+    .rank-box {
+
+        min-height:
+            105px;
+
+    }
+
+    .rank-number {
+
+        font-size:
+            25px;
+
+    }
 
 }
 
@@ -1404,125 +1793,171 @@ body {
    MOBILE
    ============================================================ */
 
-@media (max-width: 600px) {
-
+@media (max-width: 650px) {
 
     .container {
 
-        padding: 5px;
+        padding:
+            4px;
 
     }
 
 
     .title {
 
-        font-size: 20px;
+        font-size:
+            16px;
 
-        margin-bottom: 5px;
+        margin:
+            1px 0 5px 0;
 
     }
 
 
     .rank-card {
 
-        margin-bottom: 6px;
+        padding:
+            4px;
 
-        padding: 5px;
+        margin-bottom:
+            5px;
 
-        border-radius: 11px;
+        border-radius:
+            9px;
 
-        box-shadow:
-            0 6px 0 #bdbdbd,
-            0 10px 20px rgba(0,0,0,0.20);
+    }
+
+
+    .rank-main {
+
+        display:
+            grid;
+
+        grid-template-columns:
+            54px
+            minmax(145px, 1fr)
+            minmax(160px, 1.2fr);
+
+        gap:
+            3px;
+
+    }
+
+
+    .rank-box {
+
+        min-height:
+            91px;
+
+        border-radius:
+            6px;
 
     }
 
 
     .rank-label {
 
-        font-size: 6px;
+        padding:
+            2px 5px;
 
-        line-height: 7px;
+        font-size:
+            5px;
 
     }
 
 
     .rank-number {
 
-        font-size: 16px;
+        font-size:
+            21px;
 
-        line-height: 17px;
-
-    }
-
-
-    .rank-team {
-
-        font-size: 12px;
-
-        line-height: 14px;
-
-        margin: 0 0 2px 0;
+        line-height:
+            22px;
 
     }
 
 
     .rank-points {
 
-        font-size: 13px;
+        font-size:
+            12px;
 
-        line-height: 14px;
+        line-height:
+            13px;
+
+        margin-top:
+            5px;
 
     }
 
 
     .rank-points-label {
 
-        font-size: 5px;
+        font-size:
+            5px;
 
-        line-height: 6px;
+        line-height:
+            6px;
 
     }
 
 
     .rank-kills {
 
-        font-size: 10px;
+        font-size:
+            10px;
 
-        line-height: 11px;
+        line-height:
+            11px;
+
+        margin-top:
+            4px;
 
     }
 
 
     .rank-kills-label {
 
-        font-size: 5px;
+        font-size:
+            5px;
 
-        line-height: 6px;
+        line-height:
+            6px;
 
     }
 
 
-    /* PLAYER */
+    .rank-team {
+
+        font-size:
+            10px;
+
+        line-height:
+            12px;
+
+        margin:
+            0 0 2px 0;
+
+    }
+
 
     .player-header {
 
         grid-template-columns:
-            1fr
-            52px
-            38px;
+            minmax(70px, 1fr)
+            36px
+            32px
+            32px
+            32px;
 
-        height: 16px;
+        height:
+            14px;
 
-        min-height: 16px;
+        padding:
+            1px 2px;
 
-        padding: 1px 4px;
-
-        margin-top: 2px;
-
-        font-size: 5px;
-
-        line-height: 6px;
+        font-size:
+            4px;
 
     }
 
@@ -1530,200 +1965,228 @@ body {
     .player-row {
 
         grid-template-columns:
-            1fr
-            52px
-            38px;
+            minmax(70px, 1fr)
+            36px
+            32px
+            32px
+            32px;
 
-        height: 17px;
+        height:
+            17px;
 
-        min-height: 17px;
+        min-height:
+            17px;
 
-        padding: 1px 4px;
+        padding:
+            1px 2px;
 
     }
 
 
     .player-name {
 
-        font-size: 7px;
-
-        line-height: 8px;
-
-    }
-
-
-    .player-avg {
-
-        font-size: 6px;
-
-        line-height: 7px;
+        font-size:
+            6px;
 
     }
 
 
-    .player-kills {
+    .player-avg,
+    .player-kills,
+    .player-deaths,
+    .player-kd {
 
-        font-size: 7px;
-
-        line-height: 8px;
+        font-size:
+            5.5px;
 
     }
 
-
-    /* GAMES */
 
     .game-header {
 
-        height: 15px;
-
-        gap: 1px;
-
-        margin-top: 2px;
+        height:
+            14px;
 
     }
 
 
     .game-header span {
 
-        font-size: 5px;
-
-        line-height: 6px;
-
-        border-radius: 3px 3px 0 0;
+        font-size:
+            4px;
 
     }
 
 
     .game-values {
 
-        gap: 1px;
+        gap:
+            1px;
 
     }
 
 
     .game-column {
 
-        min-height: 55px;
+        min-height:
+            49px;
 
-        padding: 2px 1px;
-
-        border-radius: 0 0 3px 3px;
+        padding:
+            2px 1px;
 
     }
 
 
     .game-position-title {
 
-        font-size: 4px;
+        font-size:
+            3.5px;
 
-        line-height: 5px;
+        line-height:
+            4px;
 
     }
 
 
     .game-position {
 
-        font-size: 12px;
+        font-size:
+            10px;
 
-        line-height: 13px;
+        line-height:
+            11px;
 
     }
 
 
     .game-score-title {
 
-        margin-top: 1px;
+        font-size:
+            3px;
 
-        font-size: 3.8px;
+        line-height:
+            3.5px;
 
-        line-height: 4px;
+        margin-top:
+            3px;
 
     }
 
 
     .game-score {
 
-        font-size: 9px;
+        font-size:
+            7px;
 
-        line-height: 10px;
+        line-height:
+            8px;
 
     }
 
 
-    /* SUMMARY */
+    .summary {
+
+        grid-template-columns:
+            105px
+            minmax(0, 1fr);
+
+        gap:
+            2px;
+
+        margin-top:
+            2px;
+
+    }
+
 
     .summary-team {
 
-        height: 21px;
+        height:
+            22px;
 
-        min-height: 21px;
+        padding:
+            2px 3px;
 
-        margin-top: 1px;
-
-        padding: 1px 4px;
-
-        gap: 3px;
+        gap:
+            3px;
 
     }
 
 
     .team-mark {
 
-        width: 17px;
+        width:
+            16px;
 
-        height: 17px;
+        height:
+            16px;
 
-        font-size: 7px;
+        font-size:
+            6px;
 
     }
 
 
-    .summary-values {
+    .summary-title {
 
-        gap: 1px;
+        font-size:
+            6px;
+
+        line-height:
+            7px;
+
+    }
+
+
+    .summary-subtitle {
+
+        font-size:
+            4px;
+
+        line-height:
+            4px;
 
     }
 
 
     .summary-item {
 
-        min-height: 18px;
+        min-height:
+            22px;
 
-        padding: 1px;
+        padding:
+            2px 1px;
 
-        font-size: 4px;
-
-        line-height: 5px;
+        font-size:
+            4px;
 
     }
 
 
     .summary-label {
 
-        font-size: 8px;
+        font-size:
+            7px;
 
-        line-height: 8px;
+        line-height:
+            8px;
 
     }
 
 
-    /* FRAGGER */
-
     .fragger-title {
 
-        margin-top: 6px;
+        margin:
+            6px 0 2px 0;
 
-        margin-bottom: 2px;
+        padding:
+            4px 5px;
 
-        padding: 3px 5px;
+        font-size:
+            9px;
 
-        border-left-width: 3px;
-
-        border-radius: 4px;
-
-        font-size: 9px;
-
-        line-height: 10px;
+        border-left-width:
+            3px;
 
     }
 
@@ -1731,57 +2194,68 @@ body {
     .fragger-row {
 
         grid-template-columns:
-            32px
-            minmax(0, 1.4fr)
+            30px
+            minmax(0, 1.5fr)
             minmax(0, 1fr)
             35px;
 
-        height: 17px;
+        height:
+            18px;
 
-        min-height: 17px;
+        min-height:
+            18px;
 
-        padding: 1px 4px;
+        padding:
+            1px 3px;
 
-        font-size: 6px;
+        font-size:
+            6px;
 
     }
 
 
     .fragger-row.header {
 
-        height: 15px;
+        height:
+            15px;
 
-        min-height: 15px;
+        min-height:
+            15px;
 
-        font-size: 5px;
+        font-size:
+            5px;
 
     }
 
 
     .fragger-pos {
 
-        font-size: 7px;
+        font-size:
+            7px;
 
     }
 
 
     .fragger-player {
 
-        font-size: 6px;
+        font-size:
+            6px;
 
     }
 
 
     .fragger-team {
 
-        font-size: 5px;
+        font-size:
+            5px;
 
     }
 
 
     .fragger-kills {
 
-        font-size: 8px;
+        font-size:
+            7px;
 
     }
 
@@ -1789,71 +2263,125 @@ body {
 
 
 /* ============================================================
-   CELULARES PEQUEÑOS
+   CELULARES MUY PEQUEÑOS
    ============================================================ */
 
-@media (max-width: 380px) {
+@media (max-width: 430px) {
 
+    .rank-main {
 
-    .container {
-
-        padding: 3px;
+        grid-template-columns:
+            48px
+            minmax(125px, 1fr)
+            minmax(140px, 1.15fr);
 
     }
 
 
-    .rank-card {
+    .rank-box {
 
-        padding: 4px;
+        min-height:
+            83px;
 
-        margin-bottom: 5px;
+    }
+
+
+    .rank-number {
+
+        font-size:
+            19px;
+
+    }
+
+
+    .rank-points {
+
+        font-size:
+            10px;
+
+    }
+
+
+    .rank-kills {
+
+        font-size:
+            9px;
+
+    }
+
+
+    .player-header {
+
+        grid-template-columns:
+            minmax(60px, 1fr)
+            31px
+            27px
+            27px
+            27px;
+
+    }
+
+
+    .player-row {
+
+        grid-template-columns:
+            minmax(60px, 1fr)
+            31px
+            27px
+            27px
+            27px;
+
+    }
+
+
+    .player-name {
+
+        font-size:
+            5.5px;
+
+    }
+
+
+    .player-avg,
+    .player-kills,
+    .player-deaths,
+    .player-kd {
+
+        font-size:
+            5px;
 
     }
 
 
     .game-column {
 
-        min-height: 50px;
-
-        padding: 1px;
+        min-height:
+            45px;
 
     }
 
 
     .game-position {
 
-        font-size: 11px;
-
-        line-height: 12px;
-
-    }
-
-
-    .game-score-title {
-
-        font-size: 3.5px;
-
-        line-height: 4px;
+        font-size:
+            9px;
 
     }
 
 
     .game-score {
 
-        font-size: 8px;
-
-        line-height: 9px;
+        font-size:
+            6.5px;
 
     }
 
 
-    .fragger-row {
+    .summary {
 
         grid-template-columns:
-            28px
-            minmax(0, 1.4fr)
-            minmax(0, 1fr)
-            30px;
+            90px
+            minmax(0, 1fr);
 
     }
 
@@ -1868,7 +2396,6 @@ body {
 
 
 <div class="container">
-
 
 <div class="title">
 
@@ -1893,7 +2420,7 @@ TORNEOS MANYN
 
             rank_class = "top1"
 
-            label = "WINNERS"
+            label = "GANADORES"
 
 
         elif pos == 2:
@@ -1940,88 +2467,6 @@ TORNEOS MANYN
             ""
 
         )
-
-
-        html += f"""
-
-<div class="rank-card {rank_class}">
-
-
-    <div class="rank-label">
-
-        {label}
-
-    </div>
-
-
-    <div class="rank-number">
-
-        {medal} {pos}
-
-    </div>
-
-
-    <div class="rank-team">
-
-        {r["team"]}
-
-    </div>
-
-
-    <div class="rank-points">
-
-        {r["score"]}
-
-    </div>
-
-
-    <div class="rank-points-label">
-
-        Points
-
-    </div>
-
-
-    <div class="rank-kills">
-
-        {r["kills"]}
-
-    </div>
-
-
-    <div class="rank-kills-label">
-
-        Kills
-
-    </div>
-
-
-"""
-
-
-        # ====================================================
-        # PLAYER HEADER
-        # ====================================================
-
-        html += """
-
-<div class="player-header">
-
-    <div>
-        PLAYER
-    </div>
-
-    <div>
-        AVG KILLS
-    </div>
-
-    <div>
-        KILLS
-    </div>
-
-</div>
-
-"""
 
 
         # ====================================================
@@ -2072,6 +2517,127 @@ TORNEOS MANYN
         )
 
 
+        # ====================================================
+        # CARD
+        # ====================================================
+
+        html += f"""
+
+<div class="rank-card {rank_class}">
+
+
+<div class="rank-main">
+
+
+    <!-- RANK -->
+
+    <div class="rank-box">
+
+
+        <div class="rank-label">
+
+            {label}
+
+        </div>
+
+
+        <div class="rank-number">
+
+            {medal} {pos}
+
+        </div>
+
+
+        <div class="rank-points">
+
+            {r["score"]}
+
+        </div>
+
+
+        <div class="rank-points-label">
+
+            Puntos
+
+        </div>
+
+
+        <div class="rank-kills">
+
+            {r["kills"]}
+
+        </div>
+
+
+        <div class="rank-kills-label">
+
+            Kills
+
+        </div>
+
+
+    </div>
+
+
+    <!-- TEAM / PLAYERS -->
+
+    <div class="team-area">
+
+
+        <div class="rank-team">
+
+            {r["team"]}
+
+        </div>
+
+
+        <div class="player-header">
+
+
+            <div>
+
+                PLAYER
+
+            </div>
+
+
+            <div>
+
+                AVG
+
+            </div>
+
+
+            <div>
+
+                KILLS
+
+            </div>
+
+
+            <div>
+
+                DEATHS
+
+            </div>
+
+
+            <div>
+
+                K/D
+
+            </div>
+
+
+        </div>
+
+"""
+
+
+        # ====================================================
+        # TOP 3 PLAYERS
+        # ====================================================
+
         for p, stats in sorted_players[:3]:
 
 
@@ -2084,7 +2650,6 @@ TORNEOS MANYN
                 if stats["games"]
 
                 else
-
                 0
 
             )
@@ -2092,37 +2657,64 @@ TORNEOS MANYN
 
             html += f"""
 
-<div class="player-row">
+        <div class="player-row">
 
 
-    <div class="player-name">
+            <div class="player-name">
 
-        {p}
+                {p}
+
+            </div>
+
+
+            <div class="player-avg">
+
+                {avg:.1f}
+
+            </div>
+
+
+            <div class="player-kills">
+
+                {stats["kills"]}
+
+            </div>
+
+
+            <div class="player-deaths">
+
+                -
+
+            </div>
+
+
+            <div class="player-kd">
+
+                -
+
+            </div>
+
+
+        </div>
+
+"""
+
+
+        html += """
 
     </div>
 
 
-    <div class="player-avg">
+    <!-- GAMES -->
 
-        {avg:.1f}
+    <div class="games-area">
 
-    </div>
-
-
-    <div class="player-kills">
-
-        {stats["kills"]}
-
-    </div>
-
-
-</div>
 
 """
 
 
         # ====================================================
-        # GAMES
+        # GAME HEADER
         # ====================================================
 
         games_count = max(
@@ -2133,10 +2725,10 @@ TORNEOS MANYN
 
         html += f"""
 
-<div
-    class="game-header"
-    style="--games-count:{games_count};"
->
+        <div
+            class="game-header"
+            style="--games-count:{games_count};"
+        >
 
 """
 
@@ -2145,31 +2737,31 @@ TORNEOS MANYN
 
             html += f"""
 
-    <span>
+            <span>
 
-        M{g}
+                M{g}
 
-    </span>
+            </span>
 
 """
 
 
         html += """
 
-</div>
+        </div>
+
+
+        <div
+            class="game-values"
+            style="--games-count:{games_count};"
+        >
 
 """
 
 
-        html += f"""
-
-<div
-    class="game-values"
-    style="--games-count:{games_count};"
->
-
-"""
-
+        # ====================================================
+        # GAME CELLS
+        # ====================================================
 
         for g in allgames:
 
@@ -2216,40 +2808,39 @@ TORNEOS MANYN
 
                 html += f"""
 
-    <div class="game-column">
+            <div class="game-column">
 
 
-        <div class="game-position-title">
+                <div class="game-position-title">
 
-            POSICIÓN
+                    POSICIÓN
 
-        </div>
-
-
-        <div class="game-position {duplicate}">
-
-            {placement}
-
-        </div>
+                </div>
 
 
-        <div class="game-score-title">
+                <div class="game-position {duplicate}">
 
-            RESULTADO CON<br>
+                    {placement}
 
-            MULTIPLICADOR
-
-        </div>
+                </div>
 
 
-        <div class="game-score">
+                <div class="game-score-title">
 
-            {score}
+                    RESULTADO CON<br>
+                    MULTIPLICADOR
 
-        </div>
+                </div>
 
 
-    </div>
+                <div class="game-score">
+
+                    {score}
+
+                </div>
+
+
+            </div>
 
 """
 
@@ -2259,105 +2850,101 @@ TORNEOS MANYN
 
                 html += """
 
-    <div class="game-column">
+            <div class="game-column">
 
 
-        <div class="game-position-title">
+                <div class="game-position-title">
 
-            POSICIÓN
+                    POSICIÓN
+
+                </div>
+
+
+                <div class="game-position">
+
+                    -
+
+                </div>
+
+
+                <div class="game-score-title">
+
+                    RESULTADO CON<br>
+                    MULTIPLICADOR
+
+                </div>
+
+
+                <div class="game-score">
+
+                    -
+
+                </div>
+
+
+            </div>
+
+"""
+
+
+        html += """
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ========================================================
+     SUMMARY
+     ======================================================== -->
+
+<div class="summary">
+
+
+    <div class="summary-team">
+
+
+        <div class="team-mark">
+
+            M
 
         </div>
 
 
-        <div class="game-position">
+        <div>
 
-            -
+            <div class="summary-title">
 
-        </div>
+                TOTAL
 
-
-        <div class="game-score-title">
-
-            RESULTADO CON<br>
-
-            MULTIPLICADOR
-
-        </div>
+            </div>
 
 
-        <div class="game-score">
+            <div class="summary-subtitle">
 
-            -
+                RESULTADO GENERAL
+
+            </div>
 
         </div>
 
 
     </div>
+
+
+    <div
+        class="summary-values"
+        style="--games-count:{games_count};"
+    >
 
 """
 
 
         # ====================================================
-        # SUMMARY
+        # SUMMARY VALUES
         # ====================================================
-
-        html += f"""
-
-</div>
-
-
-<div class="summary-team">
-
-
-    <div class="team-mark">
-
-        M
-
-    </div>
-
-
-    <div>
-
-        <div
-            style="
-            color:#ffffff;
-            font-weight:900;
-            font-size:9px;
-            line-height:9px;
-            "
-        >
-
-            TOTAL
-
-        </div>
-
-
-        <div
-            style="
-            color:#8f989c;
-            font-size:6px;
-            line-height:7px;
-            "
-        >
-
-            RESULTADO GENERAL
-
-        </div>
-
-
-    </div>
-
-
-</div>
-
-
-<div
-    class="summary-values"
-    style="--games-count:{games_count};"
->
-
-"""
-
 
         for g in allgames:
 
@@ -2372,27 +2959,27 @@ TORNEOS MANYN
 
                 html += f"""
 
-    <div class="summary-item">
+        <div class="summary-item">
 
 
-        <div class="summary-label">
+            <div class="summary-label">
 
-            {info.get(
-                "kills",
-                0
-            )}
+                {info.get(
+                    "kills",
+                    0
+                )}
+
+            </div>
+
+
+            <div>
+
+                Kills
+
+            </div>
+
 
         </div>
-
-
-        <div>
-
-            Kills
-
-        </div>
-
-
-    </div>
 
 """
 
@@ -2402,31 +2989,34 @@ TORNEOS MANYN
 
                 html += """
 
-    <div class="summary-item">
+        <div class="summary-item">
 
 
-        <div class="summary-label">
+            <div class="summary-label">
 
-            -
+                -
+
+            </div>
+
+
+            <div>
+
+                Kills
+
+            </div>
+
 
         </div>
-
-
-        <div>
-
-            Kills
-
-        </div>
-
-
-    </div>
 
 """
 
 
         html += """
 
+    </div>
+
 </div>
+
 
 </div>
 
